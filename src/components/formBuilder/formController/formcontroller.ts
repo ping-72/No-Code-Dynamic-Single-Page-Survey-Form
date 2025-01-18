@@ -343,22 +343,26 @@ export class FormController {
   ): Form {
     return {
       ...form,
-      sections: form.sections.map((sec) =>
-        sec.SectionId === sectionId
-          ? {
-              ...sec,
-              question: sec.question.map((q) =>
-                q.questionId === questionId
-                  ? {
-                      ...q,
-                      dependencies: [...(q.dependencies || []), dependency],
-                    }
-                  : q
-              ),
-            }
-          : sec
+      sections: form.sections.map(
+        (sec) =>
+          sec.SectionId === sectionId // Find the section with the matching sectionId
+            ? {
+                ...sec, // Spread the existing section properties
+                question: sec.question.map(
+                  (q) =>
+                    q.questionId === questionId // Find the question with the matching questionId
+                      ? {
+                          ...q, // Spread the existing question properties
+                          dependencies: Array.from(
+                            new Set([...(q.dependencies || []), dependency]) // Add the new dependency and ensure uniqueness
+                          ),
+                        }
+                      : q // Return the question unchanged if questionId doesn't match
+                ),
+              }
+            : sec // Return the section unchanged if sectionId doesn't match
       ),
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(), // Update the updatedAt property to the current date and time
     };
   }
 
@@ -413,39 +417,6 @@ export class FormController {
       "Strongly Agree",
       "Completely Agree",
     ];
-  }
-
-  static updateScaleRange(
-    form: Form,
-    sectionId: string,
-    questionId: string,
-    range: 5 | 10
-  ): Form {
-    return {
-      ...form,
-      sections: form.sections.map((sec) =>
-        sec.SectionId === sectionId
-          ? {
-              ...sec,
-              question: sec.question.map((q) =>
-                q.questionId === questionId
-                  ? {
-                      ...q,
-                      scaleRange: range,
-                      likertLabels: this.getLikertLabels(range),
-                      options: Array.from({ length: range }, (_, i) => ({
-                        optionId: uuidv4(),
-                        questionId: q.questionId,
-                        value: `${i + 1}`,
-                      })),
-                    }
-                  : q
-              ),
-            }
-          : sec
-      ),
-      updatedAt: new Date().toISOString(),
-    };
   }
 
   static shouldDisplayOption(
