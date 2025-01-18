@@ -1,6 +1,7 @@
 export interface DependencyCondition {
   questionId: string;
   expectedAnswer: string;
+  sectionId?: string;
   questionText?: string; // Added to show question text in selector
   dependencyType: "visibility" | "options";
   targetOptions?: string[]; // Change from string to string[]

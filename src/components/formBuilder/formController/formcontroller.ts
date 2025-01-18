@@ -8,6 +8,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 export class FormController {
+  // Adds a new section to the form
   static addSection(form: Form): Form {
     const newSection: Section = {
       SectionId: uuidv4(),
@@ -26,6 +27,7 @@ export class FormController {
     };
   }
 
+  // Deletes a section from the form by sectionId
   static deleteSection(form: Form, sectionId: string): Form {
     return {
       ...form,
@@ -34,6 +36,7 @@ export class FormController {
     };
   }
 
+  // Updates the title of a section by sectionId
   static updateSectionTitle(
     form: Form,
     sectionId: string,
@@ -48,6 +51,7 @@ export class FormController {
     };
   }
 
+  // Adds a new question to a section by sectionId
   static addQuestion(
     form: Form,
     sectionId: string,
@@ -83,12 +87,12 @@ export class FormController {
     };
   }
 
+  // Updates a question's text and dependencies by questionId
   static updateQuestion(
     form: Form,
     sectionId: string,
     questionId: string,
-    questionText: string,
-    dependency?: DependencyCondition[]
+    questionText: string
   ): Form {
     return {
       ...form,
@@ -101,9 +105,6 @@ export class FormController {
                   ? {
                       ...q,
                       questionText,
-                      dependencies: dependency
-                        ? [...(q.dependencies || []), ...dependency]
-                        : q.dependencies,
                     }
                   : q
               ),
@@ -114,6 +115,7 @@ export class FormController {
     };
   }
 
+  // Deletes a question from a section by questionId
   static deleteQuestion(
     form: Form,
     sectionId: string,
@@ -152,6 +154,7 @@ export class FormController {
     };
   }
 
+  // Adds a new option to a question by questionId
   static addOption(form: Form, sectionId: string, questionId: string): Form {
     const newOption: Option = {
       optionId: uuidv4(),
@@ -176,6 +179,7 @@ export class FormController {
     };
   }
 
+  // Updates the value of an option by optionId
   static updateOptionValue(
     form: Form,
     sectionId: string,
@@ -208,6 +212,7 @@ export class FormController {
     };
   }
 
+  // Deletes an option from a question by optionId
   static deleteOption(
     form: Form,
     sectionId: string,
@@ -237,6 +242,7 @@ export class FormController {
     };
   }
 
+  // Updates the answer type of a question by questionId
   static updateAnswerType(
     form: Form,
     sectionId: string,
@@ -258,13 +264,33 @@ export class FormController {
     };
   }
 
+  // Updates the question type of a question by questionId
   static updateQuestionType(
     form: Form,
     sectionId: string,
     questionId: string,
     type: string
   ): Form {
-    return {
+    // First, find all questions that depend on this question
+    const dependentQuestions: { sectionId: string; questionId: string }[] = [];
+    form.sections.forEach((section) => {
+      section.question.forEach((question) => {
+        if (
+          question.dependencies?.some((dep) => dep.questionId === questionId)
+        ) {
+          dependentQuestions.push({
+            sectionId: section.SectionId,
+            questionId: question.questionId,
+          });
+        }
+      });
+    });
+
+    // Clear dependencies if new type is multi-select or text
+    const shouldClearDependencies = ["multi-select", "text"].includes(type);
+
+    // First update the question type
+    let updatedForm = {
       ...form,
       sections: form.sections.map((sec) =>
         sec.SectionId === sectionId
@@ -274,7 +300,11 @@ export class FormController {
                 q.questionId === questionId
                   ? {
                       ...q,
-                      type: type,
+                      type,
+                      // Clear dependencies if type is multi-select or text
+                      dependencies: shouldClearDependencies
+                        ? []
+                        : q.dependencies,
                       scaleRange: type === "linear-scale" ? 5 : undefined,
                       options:
                         type === "linear-scale"
@@ -294,8 +324,30 @@ export class FormController {
       ),
       updatedAt: new Date().toISOString(),
     };
+
+    // If dependencies should be cleared, remove all dependent questions
+    if (shouldClearDependencies && dependentQuestions.length > 0) {
+      dependentQuestions.forEach(({ sectionId, questionId }) => {
+        updatedForm = {
+          ...updatedForm,
+          sections: updatedForm.sections.map((sec) =>
+            sec.SectionId === sectionId
+              ? {
+                  ...sec,
+                  question: sec.question.filter(
+                    (q) => q.questionId !== questionId
+                  ),
+                }
+              : sec
+          ),
+        };
+      });
+    }
+
+    return updatedForm;
   }
 
+  // Adds a dependency to an option by optionId
   static addDependencyToOption(
     form: Form,
     sectionId: string,
@@ -335,6 +387,7 @@ export class FormController {
     };
   }
 
+  // Adds a dependency to a question by questionId
   static addDependency(
     form: Form,
     sectionId: string,
@@ -366,6 +419,7 @@ export class FormController {
     };
   }
 
+  // Removes a dependency from a question by dependencyIndex
   static removeDependency(
     form: Form,
     sectionId: string,
@@ -395,6 +449,7 @@ export class FormController {
     };
   }
 
+  // Returns Likert scale labels based on the range
   private static getLikertLabels(range: 5 | 10): string[] {
     if (range === 5) {
       return [
@@ -419,6 +474,7 @@ export class FormController {
     ];
   }
 
+  // Determines if an option should be displayed based on dependencies and responses
   static shouldDisplayOption(
     option: Option,
     responses: Record<string, string>,
@@ -435,6 +491,7 @@ export class FormController {
     });
   }
 
+  // Determines if a question should be displayed based on dependencies and responses
   static shouldDisplayQuestion(
     dependencies: DependencyCondition[] | undefined,
     responses: Record<string, string>
@@ -446,6 +503,7 @@ export class FormController {
       .every((dep) => responses[dep.questionId] === dep.expectedAnswer);
   }
 
+  // Creates a dependent question based on a dependency condition
   static createDependentQuestion(
     form: Form,
     sectionId: string,

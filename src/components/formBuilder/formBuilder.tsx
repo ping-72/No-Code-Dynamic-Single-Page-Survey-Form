@@ -260,6 +260,22 @@ export const FormBuilder: React.FC = () => {
     );
   };
 
+  const setFormTitle = (title: string) => {
+    setForm((prev) => ({
+      ...prev,
+      formTitle: title,
+      updatedAt: new Date().toISOString(),
+    }));
+  };
+
+  const setDescription = (description: string) => {
+    setForm((prev) => ({
+      ...prev,
+      description,
+      updatedAt: new Date().toISOString(),
+    }));
+  };
+
   return (
     <div className={classes.root}>
       {/* HEADER (TOP BAR) */}

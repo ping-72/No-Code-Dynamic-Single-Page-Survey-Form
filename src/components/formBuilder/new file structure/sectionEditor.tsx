@@ -160,6 +160,35 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     },
   };
 
+  // Add these styles to the existing dependencyDialogStyles object
+  const questionStyles = {
+    independent: {
+      backgroundColor: "#f5f7fa",
+      border: "1px solid #e0e0e0",
+      borderLeft: "4px solid #4caf50", // green border for independent questions
+    },
+    dependent: {
+      backgroundColor: "#f3f7fa",
+      borderLeft: "4px solid #2196f3", // blue border for dependent questions
+    },
+    questionBadge: {
+      padding: "4px 8px",
+      borderRadius: "4px",
+      fontSize: "0.75rem",
+      fontWeight: 500,
+      marginBottom: "8px",
+      display: "inline-block",
+    },
+    independentBadge: {
+      backgroundColor: "#4caf50",
+      color: "white",
+    },
+    dependentBadge: {
+      backgroundColor: "#2196f3",
+      color: "white",
+    },
+  };
+
   // Open dependency dialog for a specific question
   const openDependencyDialog = (ques: Question) => {
     setCurrentQuestionForDependency(ques);
@@ -245,29 +274,13 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     .flatMap((sec) => sec.question)
     .filter((q) => ["single-select", "integer", "number"].includes(q.type));
 
-  const getLikertLabels = (
-    range: 5 | 10
-  ): { value: number; label: string }[] => {
-    if (range === 5) {
-      return [
-        { value: 1, label: "Strongly Disagree" },
-        { value: 2, label: "Disagree" },
-        { value: 3, label: "Neutral" },
-        { value: 4, label: "Agree" },
-        { value: 5, label: "Strongly Agree" },
-      ];
-    }
+  const getLikertLabels = (range: 5): { value: number; label: string }[] => {
     return [
       { value: 1, label: "Strongly Disagree" },
-      { value: 2, label: "Very Strongly Disagree" },
-      { value: 3, label: "Disagree" },
-      { value: 4, label: "Somewhat Disagree" },
-      { value: 5, label: "Neutral" },
-      { value: 6, label: "Somewhat Agree" },
-      { value: 7, label: "Agree" },
-      { value: 8, label: "Strongly Agree" },
-      { value: 9, label: "Very Strongly Agree" },
-      { value: 10, label: "Completely Agree" },
+      { value: 2, label: "Disagree" },
+      { value: 3, label: "Neutral" },
+      { value: 4, label: "Agree" },
+      { value: 5, label: "Strongly Agree" },
     ];
   };
 
@@ -398,14 +411,27 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             elevation={2}
             className={classes.questionPaper}
             style={{
-              backgroundColor: ques.dependencies?.length
-                ? "#f3f7fa"
-                : undefined,
-              borderLeft: ques.dependencies?.length
-                ? "4px solid #2196f3"
-                : undefined,
+              ...(!ques.dependencies?.length
+                ? questionStyles.independent
+                : questionStyles.dependent),
             }}
           >
+            {/* Question Type Badge */}
+            <div style={{ marginBottom: "16px" }}>
+              <span
+                style={{
+                  ...questionStyles.questionBadge,
+                  ...(ques.dependencies?.length
+                    ? questionStyles.dependentBadge
+                    : questionStyles.independentBadge),
+                }}
+              >
+                {ques.dependencies?.length
+                  ? "Dependent Question"
+                  : "Independent Question"}
+              </span>
+            </div>
+
             {/* Add dependency info at the top if question has dependencies */}
             {/* @ts-ignore */}
             {ques.dependencies?.length > 0 && (
