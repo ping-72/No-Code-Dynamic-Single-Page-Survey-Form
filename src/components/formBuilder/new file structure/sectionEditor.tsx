@@ -1,3 +1,5 @@
+// sectionEditor.tsx
+
 import React, { useState } from "react";
 import { FormController } from "../formController/formcontroller";
 import {
@@ -12,7 +14,6 @@ import {
   Select,
   Radio,
   Checkbox,
-  RadioGroup,
   FormControlLabel,
   Typography,
   Dialog,
@@ -37,7 +38,7 @@ interface SectionEditorProps {
   responses: Record<string, string>;
   handleUpdateSectionTitle: (sectionId: string, title: string) => void;
   handleDeleteSection: (sectionId: string) => void;
-  handleAddQuestion: (sectionId: string) => void;
+  handleAddQuestion: (sectionId: string) => string; // Returns new questionId
   handleUpdateQuestion: (
     sectionId: string,
     questionId: string,
@@ -80,19 +81,32 @@ interface SectionEditorProps {
     dependencyIndex: number
   ) => void;
   handleCreateDependentQuestion: (
-    sectionId: string,
-    dependency: DependencyCondition,
-    questionType: string
+    targetSectionId: string,
+    parentSectionId: string,
+    parentQuestionId: string,
+    expectedAnswer: string,
+    parentOptionId: string | undefined,
+    dependencyType: "visibility" | "options",
+    questionType:
+      | "single-select"
+      | "multi-select"
+      | "integer"
+      | "number"
+      | "text"
+      | "linear-scale",
+    triggerOptionId?: string
   ) => void;
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = ({
   form,
   setForm,
+  setFormTitle,
+  setDescription,
   section,
-  responses,
-  handleUpdateSectionTitle,
   handleDeleteSection,
+  handleUpdateSectionTitle,
+  responses,
   handleAddQuestion,
   handleUpdateQuestion,
   handleDeleteQuestion,
@@ -100,11 +114,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   handleAddOption,
   handleUpdateOption,
   handleDeleteOption,
-  setFormTitle,
-  setDescription,
-  handleUpdateScaleRange,
-  handleRemoveDependency,
   handleCreateDependentQuestion,
+  handleRemoveDependency,
 }) => {
   const classes = useStyles();
 
@@ -117,23 +128,23 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
   // State for managing dependency dialog
   const [dependencyDialogOpen, setDependencyDialogOpen] = useState(false);
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
-  const [expectedAnswer, setExpectedAnswer] = useState("");
-  const [currentQuestionForDependency, setCurrentQuestionForDependency] =
-    useState<Question | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
-
-  // Additional state variables for dependency type and target options
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
+  const [expectedAnswer, setExpectedAnswer] = useState<string>("");
   const [dependencyType, setDependencyType] = useState<
     "visibility" | "options"
   >("visibility");
   const [targetOptions, setTargetOptions] = useState<string[]>([]);
+  const [newQuestionType, setNewQuestionType] = useState<
+    | "single-select"
+    | "multi-select"
+    | "integer"
+    | "number"
+    | "text"
+    | "linear-scale"
+  >("single-select");
 
-  // Add new state variable for new question type
-  const [newQuestionType, setNewQuestionType] =
-    useState<string>("single-select");
-
-  // Add these styles at the beginning of the component
+  // Styles
   const dependencyDialogStyles = {
     header: {
       backgroundColor: "#f5f5f5",
@@ -160,7 +171,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     },
   };
 
-  // Add these styles to the existing dependencyDialogStyles object
   const questionStyles = {
     independent: {
       backgroundColor: "#f5f7fa",
@@ -189,81 +199,61 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     },
   };
 
-  // Open dependency dialog for a specific question
-  const openDependencyDialog = (ques: Question) => {
-    setCurrentQuestionForDependency(ques);
+  // Open dependency dialog for creating a dependent question
+  const openDependencyDialog = () => {
     setDependencyDialogOpen(true);
   };
 
-  const handleAddDependency = () => {
-    if (currentQuestionForDependency && selectedQuestionId) {
-      const selectedQuestion = form.sections
-        .find((sec) => sec.SectionId === selectedSectionId)
-        ?.question.find((q) => q.questionId === selectedQuestionId);
-
-      if (selectedQuestion) {
-        // Call FormController.addDependency if available, or invoke a prop function here.
-        setForm((prev) =>
-          FormController.addDependency(
-            prev,
-            section.SectionId,
-            currentQuestionForDependency.questionId,
-            {
-              questionId: selectedQuestion.questionId,
-              expectedAnswer,
-              questionText: selectedQuestion.questionText,
-              dependencyType,
-              targetOptions:
-                dependencyType === "options" ? targetOptions : undefined,
-            }
-          )
-        );
-      }
-    }
-    setDependencyDialogOpen(false);
+  // Reset dialog states
+  const resetDependencyStates = () => {
     setSelectedSectionId("");
     setSelectedQuestionId("");
     setExpectedAnswer("");
     setDependencyType("visibility");
     setTargetOptions([]);
+    setNewQuestionType("single-select");
   };
 
-  // Add this new function inside your SectionEditor component
-  const handleAddQuestionWithDependency = () => {
-    if (!selectedQuestionId || !expectedAnswer || !newQuestionType) return;
+  // Handle creating a new dependent question
+  const handleCreateQuestionWithDependency = () => {
+    if (
+      !selectedSectionId ||
+      !selectedQuestionId ||
+      !expectedAnswer ||
+      !newQuestionType
+    )
+      return;
 
-    // First, create the question
-    const newQuestionId = handleAddQuestion(section.SectionId);
+    // Find the parent question to determine if it's single-select
+    const parentQuestion = form.sections
+      .find((sec) => sec.SectionId === selectedSectionId)
+      ?.question.find((q) => q.questionId === selectedQuestionId);
 
-    // Then create its dependency
-    const dependency: DependencyCondition = {
-      questionId: selectedQuestionId,
-      expectedAnswer,
-      questionText: form.sections
-        .find((sec) => sec.SectionId === selectedSectionId)
-        ?.question.find((q) => q.questionId === selectedQuestionId)
-        ?.questionText,
-      dependencyType,
-      targetOptions: dependencyType === "options" ? targetOptions : undefined,
-    };
+    // Determine if a specific option triggers the dependency
+    let triggerOptionId: string | undefined = undefined;
+    if (
+      dependencyType === "options" &&
+      parentQuestion?.type === "single-select"
+    ) {
+      // Here, you need to capture which option(s) trigger the dependency
+      // This requires additional UI to select the triggering option(s)
+      // For simplicity, we'll assume a single triggerOptionId is selected
+      // You should implement the UI to capture this based on your requirements
+      // Example:
+      // triggerOptionId = selectedTriggerOptionId; // Capture from UI
+    }
 
-    // Update question type and add dependency
-    setForm((prev) => {
-      const withType = FormController.updateQuestionType(
-        prev,
-        section.SectionId,
-        newQuestionId,
-        newQuestionType
-      );
-      return FormController.addDependency(
-        withType,
-        section.SectionId,
-        newQuestionId,
-        dependency
-      );
-    });
+    handleCreateDependentQuestion(
+      section.SectionId, // targetSectionId
+      selectedSectionId, // parentSectionId
+      selectedQuestionId, // parentQuestionId
+      expectedAnswer, // expectedAnswer
+      dependencyType === "options" ? undefined : undefined, // parentOptionId: Adjust as needed
+      dependencyType, // dependencyType
+      newQuestionType, // questionType
+      triggerOptionId // triggerOptionId
+    );
 
-    // Reset states
     resetDependencyStates();
     setDependencyDialogOpen(false);
   };
@@ -284,7 +274,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     ];
   };
 
-  // Add helper function to check if an option should be displayed
+  // Helper function to check if an option should be displayed
   const shouldDisplayOption = (
     option: Option,
     responses: Record<string, string>
@@ -292,11 +282,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     return FormController.shouldDisplayOption(
       option,
       responses,
-      option.dependentOn
+      option.dependencies
     );
   };
 
-  // Add this helper function to the component
+  // Get options for the selected question (if single-select)
   const getSelectedQuestionOptions = () => {
     const selectedQuestion = form.sections
       .find((sec) => sec.SectionId === selectedSectionId)
@@ -307,15 +297,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
       : [];
   };
 
-  const resetDependencyStates = () => {
-    setSelectedSectionId("");
-    setSelectedQuestionId("");
-    setExpectedAnswer("");
-    setDependencyType("visibility");
-    setTargetOptions([]);
-  };
-
-  // Add this helper function inside SectionEditor component
+  // Get dependency information for display
   const getDependencyInfo = (dependencies?: DependencyCondition[]) => {
     if (!dependencies?.length) return null;
 
@@ -355,7 +337,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
           startIcon={<Delete />}
           onClick={() => handleDeleteSection(section.SectionId)}
         >
-          Section
+          Delete Section
         </Button>
       </div>
       <br />
@@ -433,7 +415,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             </div>
 
             {/* Add dependency info at the top if question has dependencies */}
-            {/* @ts-ignore */}
             {ques.dependencies?.length > 0 && (
               <div
                 style={{
@@ -513,7 +494,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             </Grid>
             {/* Render options/inputs based on question type */}
             <div>
-              {ques.type === "single-select" && (
+              {["single-select", "multi-select"].includes(ques.type) && (
                 <>
                   {ques.options
                     .filter((opt) => shouldDisplayOption(opt, responses))
@@ -526,7 +507,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                           marginBottom: "8px",
                         }}
                       >
-                        <Radio disabled style={{ marginRight: "8px" }} />
+                        {ques.type === "single-select" ? (
+                          <Radio disabled style={{ marginRight: "8px" }} />
+                        ) : (
+                          <Checkbox disabled style={{ marginRight: "8px" }} />
+                        )}
                         <TextField
                           label="Option"
                           value={option.value}
@@ -575,71 +560,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 </>
               )}
 
-              {ques.type === "multi-select" && (
-                <>
-                  {ques.options
-                    .filter((opt) => shouldDisplayOption(opt, responses))
-                    .map((option) => (
-                      <div
-                        key={option.optionId}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        <Checkbox disabled style={{ marginRight: "8px" }} />
-                        <TextField
-                          label="Option"
-                          value={option.value}
-                          onChange={(e) =>
-                            handleUpdateOption(
-                              section.SectionId,
-                              ques.questionId,
-                              option.optionId,
-                              e.target.value
-                            )
-                          }
-                          fullWidth
-                          margin="dense"
-                        />
-                        <IconButton
-                          aria-label="delete-option"
-                          onClick={() =>
-                            handleDeleteOption(
-                              section.SectionId,
-                              ques.questionId,
-                              option.optionId
-                            )
-                          }
-                        >
-                          <Delete />
-                        </IconButton>
-                      </div>
-                    ))}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginTop: 8,
-                    }}
-                  >
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={() =>
-                        handleAddOption(section.SectionId, ques.questionId)
-                      }
-                    >
-                      Add Options
-                    </Button>
-                  </div>
-                </>
-              )}
-
-              {(ques.type === "integer" ||
-                ques.type === "number" ||
-                ques.type === "text") && (
+              {["integer", "number", "text"].includes(ques.type) && (
                 <>
                   {ques.type === "integer" && (
                     <TextField
@@ -676,25 +597,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
               {ques.type === "linear-scale" && (
                 <div>
-                  <FormControl component="fieldset">
-                    <RadioGroup
-                      row
-                      value={ques.scaleRange || 5}
-                      onChange={(e) =>
-                        handleUpdateScaleRange(
-                          section.SectionId,
-                          ques.questionId,
-                          parseInt(e.target.value) as 5 | 10
-                        )
-                      }
-                    >
-                      <FormControlLabel
-                        value={5}
-                        control={<Radio />}
-                        label="5-point scale"
-                      />
-                    </RadioGroup>
-                  </FormControl>
                   <div
                     style={{
                       display: "flex",
@@ -744,7 +646,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   handleDeleteQuestion(section.SectionId, ques.questionId)
                 }
               >
-                Question
+                Delete Question
               </Button>
             </div>
           </Paper>
@@ -762,10 +664,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         <Button
           variant="outlined"
           color="secondary"
-          onClick={() => {
-            setDependencyDialogOpen(true);
-            setCurrentQuestionForDependency(null); // Reset since this is a new question
-          }}
+          onClick={openDependencyDialog}
         >
           Add Dependent Question
         </Button>
@@ -774,7 +673,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
       {/* Dependency Dialog */}
       <Dialog
         open={dependencyDialogOpen}
-        onClose={() => setDependencyDialogOpen(false)}
+        onClose={() => {
+          setDependencyDialogOpen(false);
+          resetDependencyStates();
+        }}
         maxWidth="sm"
         fullWidth
         PaperProps={{
@@ -782,61 +684,45 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         }}
       >
         <DialogTitle style={dependencyDialogStyles.headerTitle}>
-          {currentQuestionForDependency
-            ? "Add Dependency"
-            : "Create Dependent Question"}
+          Create Dependent Question
         </DialogTitle>
 
         <DialogContent>
-          {/* Summary Section */}
-          {selectedSectionId && selectedQuestionId && (
-            <div style={dependencyDialogStyles.selectedDependency}>
-              <Typography variant="subtitle2">Selected Dependency:</Typography>
-              <Typography>
-                Section:{" "}
-                {
-                  form.sections.find((s) => s.SectionId === selectedSectionId)
-                    ?.sectionTitle
-                }
-              </Typography>
-              <Typography>
-                Question:{" "}
-                {
-                  form.sections
-                    .find((s) => s.SectionId === selectedSectionId)
-                    ?.question.find((q) => q.questionId === selectedQuestionId)
-                    ?.questionText
-                }
-              </Typography>
-            </div>
-          )}
-
-          {/* Question Type Selection */}
-          {!currentQuestionForDependency && (
-            <div style={dependencyDialogStyles.section}>
-              <Typography variant="subtitle2" gutterBottom>
-                1. Select Question Type
-              </Typography>
-              <FormControl fullWidth>
-                <InputLabel>New Question Type</InputLabel>
-                <Select
-                  value={newQuestionType}
-                  onChange={(e) => setNewQuestionType(e.target.value as string)}
-                >
-                  <MenuItem value="single-select">Single Select</MenuItem>
-                  <MenuItem value="multi-select">Multi Select</MenuItem>
-                  <MenuItem value="text">Text</MenuItem>
-                  <MenuItem value="number">Number</MenuItem>
-                  <MenuItem value="integer">Integer</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-          )}
-
-          {/* Dependency Configuration */}
+          {/* 1. Select Question Type */}
           <div style={dependencyDialogStyles.section}>
             <Typography variant="subtitle2" gutterBottom>
-              {currentQuestionForDependency ? "1" : "2"}. Configure Dependency
+              1. Select Question Type
+            </Typography>
+            <FormControl fullWidth>
+              <InputLabel>New Question Type</InputLabel>
+              <Select
+                value={newQuestionType}
+                onChange={(e) =>
+                  setNewQuestionType(
+                    e.target.value as
+                      | "single-select"
+                      | "multi-select"
+                      | "integer"
+                      | "number"
+                      | "text"
+                      | "linear-scale"
+                  )
+                }
+              >
+                <MenuItem value="single-select">Single Select</MenuItem>
+                <MenuItem value="multi-select">Multi Select</MenuItem>
+                <MenuItem value="text">Text</MenuItem>
+                <MenuItem value="number">Number</MenuItem>
+                <MenuItem value="integer">Integer</MenuItem>
+                <MenuItem value="linear-scale">Linear Scale</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
+
+          {/* 2. Configure Dependency */}
+          <div style={dependencyDialogStyles.section}>
+            <Typography variant="subtitle2" gutterBottom>
+              2. Configure Dependency
             </Typography>
 
             {/* Section Selection */}
@@ -923,36 +809,39 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             )}
           </div>
 
-          {/* Options Configuration */}
+          {/* 3. Configure Options (if dependencyType is "options") */}
           {dependencyType === "options" &&
-            currentQuestionForDependency?.type === "single-select" && (
+            form.sections
+              .find((sec) => sec.SectionId === selectedSectionId)
+              ?.question.find((q) => q.questionId === selectedQuestionId)
+              ?.type === "single-select" && (
               <div style={dependencyDialogStyles.section}>
                 <Typography variant="subtitle2" gutterBottom>
-                  {currentQuestionForDependency ? "2" : "3"}. Configure Options
+                  3. Configure Trigger Option
                 </Typography>
-                {currentQuestionForDependency.options.map((option) => (
-                  <FormControlLabel
-                    key={option.optionId}
-                    control={
-                      <Checkbox
-                        checked={targetOptions.includes(option.value)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setTargetOptions([...targetOptions, option.value]);
-                            // </DialogActions>
-                          } else {
-                            setTargetOptions(
-                              targetOptions.filter(
-                                (opt) => opt !== option.value
-                              )
-                            );
-                          }
-                        }}
-                      />
+                <FormControl fullWidth>
+                  <InputLabel>Select Trigger Option</InputLabel>
+                  <Select
+                    value={triggerOptionId || ""}
+                    onChange={(e) =>
+                      setTriggerOptionId(e.target.value as string)
                     }
-                    label={option.value}
-                  />
-                ))}
+                  >
+                    {form.sections
+                      .find((sec) => sec.SectionId === selectedSectionId)
+                      ?.question.find(
+                        (q) => q.questionId === selectedQuestionId
+                      )
+                      ?.options.map((option) => (
+                        <MenuItem key={option.optionId} value={option.optionId}>
+                          {option.value}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                  <Typography variant="caption" color="textSecondary">
+                    Select the option that will trigger this dependency
+                  </Typography>
+                </FormControl>
               </div>
             )}
         </DialogContent>
@@ -966,23 +855,15 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             Cancel
           </Button>
           <Button
-            onClick={() => {
-              if (currentQuestionForDependency) {
-                handleAddDependency();
-              } else {
-                handleAddQuestionWithDependency();
-              }
-            }}
+            onClick={handleCreateQuestionWithDependency}
             color="primary"
             disabled={
               !selectedQuestionId ||
               !expectedAnswer ||
-              (dependencyType === "options" && targetOptions.length === 0)
+              (dependencyType === "options" && !triggerOptionId)
             }
           >
-            {currentQuestionForDependency
-              ? "Add Dependency"
-              : "Create Question"}
+            Create Question
           </Button>
         </DialogActions>
       </Dialog>

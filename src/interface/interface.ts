@@ -1,7 +1,7 @@
 export interface DependencyCondition {
+  sectionId?: string;
   questionId: string;
   expectedAnswer: string;
-  sectionId?: string;
   questionText?: string; // Added to show question text in selector
   dependencyType: "visibility" | "options";
   targetOptions?: string[]; // Change from string to string[]
@@ -11,7 +11,7 @@ export interface Option {
   optionId: string;
   questionId: string;
   value: string;
-  dependentOn?: DependencyCondition[];
+  dependencies?: DependencyCondition[];
 }
 
 export interface Question {
@@ -27,6 +27,7 @@ export interface Question {
     | "linear-scale";
   isRequired: boolean;
   dependencies?: DependencyCondition[];
+  dependentOn?: DependencyCondition[];
   order: number;
   createdAt: string;
   options: Option[];

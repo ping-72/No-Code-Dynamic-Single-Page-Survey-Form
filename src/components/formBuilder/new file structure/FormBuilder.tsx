@@ -108,6 +108,7 @@ const FormBuilder: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    console.log("Form is updated");
     localStorage.setItem(form.formId, JSON.stringify(form));
   }, [form]);
 
@@ -159,6 +160,7 @@ const FormBuilder: React.FC = () => {
     setForm((prev) =>
       FormController.deleteOption(prev, sectionId, questionId, optionId)
     );
+
   const handleUpdateQuestionType = (
     sectionId: string,
     questionId: string,
@@ -167,6 +169,37 @@ const FormBuilder: React.FC = () => {
     setForm((prev) =>
       FormController.updateQuestionType(prev, sectionId, questionId, type)
     );
+
+  const handleAddQuestionWithDependency = (
+    targetSectionId: string,
+    parentSectionId: string,
+    parentQuestionId: string,
+    expectedAnswer: string,
+    parentOptionId: string | undefined,
+    dependencyType: "visibility" | "options",
+    questionType:
+      | "single-select"
+      | "multi-select"
+      | "integer"
+      | "number"
+      | "text"
+      | "linear-scale",
+    triggerOptionId?: string
+  ) => {
+    setForm((prevForm) =>
+      FormController.createDependentQuestion(
+        prevForm,
+        targetSectionId,
+        parentSectionId,
+        parentQuestionId,
+        expectedAnswer,
+        parentOptionId,
+        dependencyType,
+        questionType,
+        triggerOptionId
+      )
+    );
+  };
 
   const setFormTitle = (title: string) =>
     setForm((prev) => ({ ...prev, formTitle: title }));
@@ -201,6 +234,7 @@ const FormBuilder: React.FC = () => {
               handleDeleteOption={handleDeleteOption}
               setFormTitle={setFormTitle}
               setDescription={setDescription}
+              handleCreateDependentQuestion={handleAddQuestionWithDependency}
             />
           )}
         </div>

@@ -1,3 +1,4 @@
+import { formControlClasses } from "@mui/material";
 import {
   Form,
   Section,
@@ -6,8 +7,57 @@ import {
   Option,
 } from "./../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
+import { SingleBed } from "@material-ui/icons";
 
 export class FormController {
+  private static getLikertLabels(range: 5 | 10): string[] {
+    if (range === 5) {
+      return [
+        "Strongly Disagree",
+        "Disagree",
+        "Neutral",
+        "Agree",
+        "Strongly Agree",
+      ];
+    }
+    return [
+      "Strongly Disagree",
+      "Mostly Disagree",
+      "Disagree",
+      "Somewhat Disagree",
+      "Neutral",
+      "Somewhat Agree",
+      "Agree",
+      "Mostly Agree",
+      "Strongly Agree",
+      "Completely Agree",
+    ];
+  }
+
+  // Finds a section by ID
+  private static findSection(
+    form: Form,
+    sectionId: string
+  ): Section | undefined {
+    return form.sections.find((sec) => sec.SectionId === sectionId);
+  }
+
+  // Finds a question by ID within a given section
+  private static findQuestion(
+    section: Section,
+    questionId: string
+  ): Question | undefined {
+    return section.question.find((q) => q.questionId === questionId);
+  }
+
+  // Finds an option by ID within a given question
+  private static findOption(
+    question: Question,
+    optionId: string
+  ): Option | undefined {
+    return question.options.find((opt) => opt.optionId === optionId);
+  }
+
   // Adds a new section to the form
   static addSection(form: Form): Form {
     const newSection: Section = {
@@ -350,27 +400,48 @@ export class FormController {
   // Adds a dependency to an option by optionId
   static addDependencyToOption(
     form: Form,
-    sectionId: string,
-    questionId: string,
-    optionId: string,
-    dependency: DependencyCondition
+    selfSectionId: string,
+    selfQuestionId: string,
+    selfOptionId: string,
+    dependentSectionId: string,
+    dependency: DependencyCondition,
+    dependencyType: string,
+    targetOptions: string[]
   ): Form {
+    const selfSection = FormController.findSection(form, selfSectionId);
+    const dependentSection = FormController.findSection(
+      form,
+      dependentSectionId
+    );
+
+    if (!selfSection || !dependentSection) return form;
+    if (dependentSection.order >= selfSection.order) return form;
+
+    const selfQuestion = FormController.findQuestion(
+      selfSection,
+      selfQuestionId
+    );
+    if (!selfQuestion) return form;
+
+    const selfOption = FormController.findOption(selfQuestion, selfOptionId);
+    if (!selfOption) return form;
+
     return {
       ...form,
       sections: form.sections.map((sec) => {
-        if (sec.SectionId === sectionId) {
+        if (sec.SectionId === selfSectionId) {
           return {
             ...sec,
             question: sec.question.map((q) => {
-              if (q.questionId === questionId) {
+              if (q.questionId === selfQuestionId) {
                 return {
                   ...q,
                   options: q.options.map((opt) => {
-                    if (opt.optionId === optionId) {
-                      const existingDeps = opt.dependentOn || [];
+                    if (opt.optionId === selfOptionId) {
+                      const existingDeps = opt.dependencies || [];
                       return {
-                        ...opt,
-                        dependentOn: [...existingDeps, dependency],
+                        opt,
+                        dependencies: [...existingDeps, dependency],
                       };
                     }
                     return opt;
@@ -383,7 +454,7 @@ export class FormController {
         }
         return sec;
       }),
-      updatedAt: new Date().toString(),
+      updatedAt: new Date().toISOString(),
     };
   }
 
@@ -394,28 +465,35 @@ export class FormController {
     questionId: string,
     dependency: DependencyCondition
   ): Form {
+    const currentSection = FormController.findSection(form, sectionId);
+    const dependentSection = form.sections.find((sec) =>
+      sec.question.some((q) => q.questionId === dependency.questionId)
+    );
+
+    // Validate existence and order of sections
+    if (!currentSection || !dependentSection) return form;
+    if (dependentSection.order >= currentSection.order) return form;
+
     return {
       ...form,
-      sections: form.sections.map(
-        (sec) =>
-          sec.SectionId === sectionId // Find the section with the matching sectionId
-            ? {
-                ...sec, // Spread the existing section properties
-                question: sec.question.map(
-                  (q) =>
-                    q.questionId === questionId // Find the question with the matching questionId
-                      ? {
-                          ...q, // Spread the existing question properties
-                          dependencies: Array.from(
-                            new Set([...(q.dependencies || []), dependency]) // Add the new dependency and ensure uniqueness
-                          ),
-                        }
-                      : q // Return the question unchanged if questionId doesn't match
-                ),
-              }
-            : sec // Return the section unchanged if sectionId doesn't match
+      sections: form.sections.map((sec) =>
+        sec.SectionId === sectionId
+          ? {
+              ...sec,
+              question: sec.question.map((q) =>
+                q.questionId === questionId
+                  ? {
+                      ...q,
+                      dependencies: Array.from(
+                        new Set([...(q.dependencies || []), dependency])
+                      ),
+                    }
+                  : q
+              ),
+            }
+          : sec
       ),
-      updatedAt: new Date().toISOString(), // Update the updatedAt property to the current date and time
+      updatedAt: new Date().toISOString(),
     };
   }
 
@@ -428,50 +506,117 @@ export class FormController {
   ): Form {
     return {
       ...form,
-      sections: form.sections.map((sec) =>
-        sec.SectionId === sectionId
-          ? {
-              ...sec,
-              question: sec.question.map((q) =>
-                q.questionId === questionId
-                  ? {
-                      ...q,
-                      dependencies: (q.dependencies || []).filter(
-                        (_, index) => index !== dependencyIndex
-                      ),
-                    }
-                  : q
-              ),
-            }
-          : sec
-      ),
+      sections: form.sections.map((sec) => {
+        if (sec.SectionId === sectionId) {
+          return {
+            ...sec,
+            question: sec.question.map((q) => {
+              if (q.questionId === questionId) {
+                return {
+                  ...q,
+                  dependencies: (q.dependencies || []).filter(
+                    (_, index) => index !== dependencyIndex
+                  ),
+                };
+              }
+              return q;
+            }),
+          };
+        }
+        return sec;
+      }),
       updatedAt: new Date().toISOString(),
     };
   }
 
-  // Returns Likert scale labels based on the range
-  private static getLikertLabels(range: 5 | 10): string[] {
-    if (range === 5) {
-      return [
-        "Strongly Disagree",
-        "Disagree",
-        "Neutral",
-        "Agree",
-        "Strongly Agree",
-      ];
+  static createDependentQuestion(
+    form: Form,
+    targetSectionId: string,
+    parentSectionId: string,
+    parentQuestionId: string,
+    expectedAnswer: string,
+    parentOptionId: string | undefined,
+    dependencyType: "visibility" | "options",
+    questionType: string,
+    triggerOptionId?: string
+  ): Form {
+    // Validate target and parent sections
+    const targetSection = FormController.findSection(form, targetSectionId);
+    const parentSection = FormController.findSection(form, parentSectionId);
+    if (!targetSection || !parentSection) return form;
+
+    // Ensure parent's order precedes target's order
+    if (parentSection.order >= targetSection.order) return form;
+
+    // Find the parent question
+    const parentQuestion = FormController.findQuestion(
+      parentSection,
+      parentQuestionId
+    );
+    if (!parentQuestion) return form;
+
+    // Build a dependency condition using parent information
+    const dependency: DependencyCondition = {
+      sectionId: parentSectionId,
+      questionId: parentQuestionId,
+      expectedAnswer, // Placeholder; set as needed
+      questionText: parentQuestion.questionText,
+      dependencyType,
+      targetOptions: [],
+    };
+
+    // Update dependency on the parent question
+    let updatedForm = FormController.addDependency(
+      form,
+      parentSectionId,
+      parentQuestionId,
+      dependency
+    );
+
+    // If parent question is single-select, update option dependency as well
+    if (parentQuestion.type === "single-select" && triggerOptionId) {
+      updatedForm = FormController.addDependencyToOption(
+        updatedForm,
+        parentSectionId,
+        parentQuestionId,
+        triggerOptionId,
+        parentSectionId, // Using parentSectionId as dependentSectionId placeholder
+        dependency,
+        dependencyType,
+        dependency.targetOptions || []
+      );
     }
-    return [
-      "Strongly Disagree",
-      "Mostly Disagree",
-      "Disagree",
-      "Somewhat Disagree",
-      "Neutral",
-      "Somewhat Agree",
-      "Agree",
-      "Mostly Agree",
-      "Strongly Agree",
-      "Completely Agree",
-    ];
+
+    // Create the new dependent question in the target section
+    const newQuestion: Question = {
+      questionId: uuidv4(),
+      sectionId: targetSectionId,
+      questionText: `[Dependent Question] ${
+        parentQuestion.questionText || "New Question"
+      }`,
+      type: "single-select",
+      isRequired: true,
+      dependencies: [dependency],
+      order: targetSection.question.length,
+      createdAt: new Date().toISOString(),
+      options:
+        questionType === "single-select" || questionType === "multi-select"
+          ? [{ optionId: uuidv4(), questionId: "", value: "Option 1" }]
+          : [],
+    };
+
+    // Add the new question to the target section
+    updatedForm = {
+      ...updatedForm,
+      sections: updatedForm.sections.map((sec) =>
+        sec.SectionId === targetSectionId
+          ? { ...sec, question: [...sec.question, newQuestion] }
+          : sec
+      ),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return updatedForm;
   }
 
   // Determines if an option should be displayed based on dependencies and responses
@@ -504,45 +649,4 @@ export class FormController {
   }
 
   // Creates a dependent question based on a dependency condition
-  static createDependentQuestion(
-    form: Form,
-    sectionId: string,
-    dependency: DependencyCondition,
-    questionType: string
-  ): Form {
-    const dependentSection = form.sections.find((sec) =>
-      sec.question.some((q) => q.questionId === dependency.questionId)
-    );
-
-    const dependentQuestion = dependentSection?.question.find(
-      (q) => q.questionId === dependency.questionId
-    );
-
-    const newQuestion: Question = {
-      questionId: uuidv4(),
-      sectionId,
-      questionText: `[Dependent Question] ${
-        dependentQuestion?.questionText || "New Question"
-      }`,
-      type: questionType,
-      isRequired: true,
-      dependencies: [dependency],
-      order: 0,
-      createdAt: new Date().toISOString(),
-      options:
-        questionType === "single-select" || questionType === "multi-select"
-          ? [{ optionId: uuidv4(), questionId: "", value: "Option 1" }]
-          : [],
-    };
-
-    return {
-      ...form,
-      sections: form.sections.map((sec) =>
-        sec.SectionId === sectionId
-          ? { ...sec, question: [...sec.question, newQuestion] }
-          : sec
-      ),
-      updatedAt: new Date().toISOString(),
-    };
-  }
 }
