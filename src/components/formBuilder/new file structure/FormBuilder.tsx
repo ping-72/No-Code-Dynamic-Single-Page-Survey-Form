@@ -33,7 +33,7 @@ const FormBuilder: React.FC = () => {
         sectionTitle: "Introduction",
         description:
           "Provide the title, description and optionally an image for the form.",
-        question: [],
+        questions: [],
         order: 0,
         createdAt: new Date().toISOString(),
       },
@@ -43,7 +43,7 @@ const FormBuilder: React.FC = () => {
         sectionTitle: "Socio-Demographic Information",
         description:
           "Provide the title, description and optionally an image for the form.",
-        question: [
+        questions: [
           {
             questionId: uuidv4(),
             sectionId: "",
@@ -93,7 +93,7 @@ const FormBuilder: React.FC = () => {
       return {
         ...prevForm,
         sections: prevForm.sections.map((section) => {
-          const updatedQuestions = section.question.map((q) => ({
+          const updatedQuestions = section.questions.map((q) => ({
             ...q,
             sectionId: section.SectionId,
             options: q.options.map((opt) => ({

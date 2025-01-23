@@ -1,17 +1,8 @@
 // sectionEditor.tsx
 
 import React, { useState } from "react";
-import { FormController } from "../formController/formcontroller";
-import { Delete } from "@material-ui/icons";
-import { useStyles } from "../formbuilderStyle";
-import { DependencyDialog } from "./sectionEditor/dependencyDialog";
-import {
-  DependencyCondition,
-  Form,
-  Section,
-  Question,
-  Option,
-} from "../../../interface/interface";
+import { FormController } from "../../formController/formcontroller";
+import { DependencyDialog } from "./dependencyDialog";
 import {
   Paper,
   TextField,
@@ -26,6 +17,15 @@ import {
   Checkbox,
   Typography,
 } from "@material-ui/core";
+import { Delete } from "@material-ui/icons";
+import { useStyles } from "../../formbuilderStyle";
+import {
+  DependencyCondition,
+  Form,
+  Section,
+  Question,
+  Option,
+} from "../../../../interface/interface";
 
 interface SectionEditorProps {
   form: Form;
@@ -379,9 +379,9 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
       )}
 
       {/* Render questions */}
-      {section &&
-        section.questions &&
-        section.questions.map((ques: Question) => (
+      {section.questions
+        .filter((ques: Question) => shouldDisplay(ques.dependencies, responses))
+        .map((ques: Question) => (
           <Paper
             key={ques.questionId}
             elevation={2}
@@ -409,6 +409,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             </div>
 
             {/* Add dependency info at the top if question has dependencies */}
+            {/* @ts-ignore */}
             {ques.dependencies?.length > 0 && (
               <div
                 style={{
@@ -491,8 +492,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
               {["single-select", "multi-select"].includes(ques.type) && (
                 <>
                   {ques.options
-                    // .filter((opt) => shouldDisplayOption(opt, responses))
-                    .map((option) => (
+                    .filter((opt: Option) =>
+                      shouldDisplayOption(opt, responses)
+                    )
+                    .map((option: Option) => (
                       <div
                         key={option.optionId}
                         style={{
@@ -667,12 +670,15 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
       {/* Dependency Dialog */}
       <DependencyDialog
         open={dependencyDialogOpen}
-        onClose={() => setDependencyDialogOpen(false)}
         form={form}
-        section={section}
-        currentQuestionForDependency={null}
-        handleCreateDependentQuestion={handleCreateDependentQuestion}
-      ></DependencyDialog>
+        currentSectionOrder={form.sections[activeSection]?.order || 0}
+        targetSectionId={form.sections[activeSection]?.SectionId || ""}
+        handleCreateDependentQuestion={handleCreateQuestionWithDependency}
+        onClose={() => {
+          setDependencyDialogOpen(false);
+          resetDependencyStates();
+        }}
+      />
     </Paper>
   );
 };

@@ -1,4 +1,3 @@
-import { formControlClasses } from "@mui/material";
 import {
   Form,
   Section,
@@ -7,7 +6,6 @@ import {
   Option,
 } from "./../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
-import { SingleBed } from "@material-ui/icons";
 
 export class FormController {
   private static getLikertLabels(range: 5 | 10): string[] {
@@ -47,7 +45,7 @@ export class FormController {
     section: Section,
     questionId: string
   ): Question | undefined {
-    return section.question.find((q) => q.questionId === questionId);
+    return section.questions.find((q) => q.questionId === questionId);
   }
 
   // Finds an option by ID within a given question
@@ -65,7 +63,7 @@ export class FormController {
       formId: form.formId,
       sectionTitle: "New Section",
       description: "",
-      question: [],
+      questions: [],
       order: form.sections.length,
       createdAt: new Date().toISOString(),
     };
@@ -117,8 +115,8 @@ export class FormController {
       isRequired: true,
       dependencies: dependency || [],
       order:
-        form.sections.find((s) => s.SectionId === sectionId)?.question.length ||
-        0,
+        form.sections.find((s) => s.SectionId === sectionId)?.questions
+          .length || 0,
       createdAt: new Date().toISOString(),
       options: [],
     };
@@ -129,7 +127,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: [...sec.question, newQuestion],
+              questions: [...sec.questions, newQuestion],
             }
           : sec
       ),
@@ -150,7 +148,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              question: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,
@@ -176,14 +174,15 @@ export class FormController {
       ...form,
       sections: form.sections.map((sec) => ({
         ...sec,
-        question: sec.question.map((q) => ({
+        questions: sec.questions.map((q) => ({
           ...q,
           dependencies:
             q.dependencies?.filter((d) => d.questionId !== questionId) || [],
           options: q.options.map((opt) => ({
             ...opt,
             dependentOn:
-              opt.dependentOn?.filter((d) => d.questionId !== questionId) || [],
+              opt.dependencies?.filter((d) => d.questionId !== questionId) ||
+              [],
           })),
         })),
       })),
@@ -196,7 +195,9 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.filter((q) => q.questionId !== questionId),
+              question: sec.questions.filter(
+                (q) => q.questionId !== questionId
+              ),
             }
           : sec
       ),
@@ -217,7 +218,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? { ...q, options: [...q.options, newOption] }
                   : q
@@ -243,7 +244,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,
@@ -275,7 +276,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,
@@ -305,7 +306,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId ? { ...q, answerType: type } : q
               ),
             }
@@ -324,7 +325,7 @@ export class FormController {
     // First, find all questions that depend on this question
     const dependentQuestions: { sectionId: string; questionId: string }[] = [];
     form.sections.forEach((section) => {
-      section.question.forEach((question) => {
+      section.questions.forEach((question) => {
         if (
           question.dependencies?.some((dep) => dep.questionId === questionId)
         ) {
@@ -346,7 +347,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,
@@ -384,7 +385,7 @@ export class FormController {
             sec.SectionId === sectionId
               ? {
                   ...sec,
-                  question: sec.question.filter(
+                  questions: sec.questions.filter(
                     (q) => q.questionId !== questionId
                   ),
                 }
@@ -432,7 +433,7 @@ export class FormController {
         if (sec.SectionId === selfSectionId) {
           return {
             ...sec,
-            question: sec.question.map((q) => {
+            questions: sec.questions.map((q) => {
               if (q.questionId === selfQuestionId) {
                 return {
                   ...q,
@@ -467,7 +468,7 @@ export class FormController {
   ): Form {
     const currentSection = FormController.findSection(form, sectionId);
     const dependentSection = form.sections.find((sec) =>
-      sec.question.some((q) => q.questionId === dependency.questionId)
+      sec.questions.some((q) => q.questionId === dependency.questionId)
     );
 
     // Validate existence and order of sections
@@ -480,7 +481,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.question.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,
@@ -510,7 +511,7 @@ export class FormController {
         if (sec.SectionId === sectionId) {
           return {
             ...sec,
-            question: sec.question.map((q) => {
+            questions: sec.questions.map((q) => {
               if (q.questionId === questionId) {
                 return {
                   ...q,
@@ -597,7 +598,7 @@ export class FormController {
       type: "single-select",
       isRequired: true,
       dependencies: [dependency],
-      order: targetSection.question.length,
+      order: targetSection.questions.length,
       createdAt: new Date().toISOString(),
       options:
         questionType === "single-select" || questionType === "multi-select"
@@ -610,7 +611,7 @@ export class FormController {
       ...updatedForm,
       sections: updatedForm.sections.map((sec) =>
         sec.SectionId === targetSectionId
-          ? { ...sec, question: [...sec.question, newQuestion] }
+          ? { ...sec, questions: [...sec.questions, newQuestion] }
           : sec
       ),
       updatedAt: new Date().toISOString(),

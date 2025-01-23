@@ -1,5 +1,5 @@
 // src/components/SectionEditor/DependencyDialog.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,8 +12,6 @@ import {
   Select,
   MenuItem,
   TextField,
-  Checkbox,
-  FormControlLabel,
 } from "@material-ui/core";
 import {
   Form,
@@ -26,31 +24,137 @@ interface DependencyDialogProps {
   open: boolean;
   onClose: () => void;
   form: Form;
-  setForm: React.Dispatch<React.SetStateAction<Form>>;
   section: Section;
   currentQuestionForDependency: Question | null;
+  handleCreateDependentQuestion: (
+    targetSectionId: string,
+    parentSectionId: string,
+    parentQuestionId: string,
+    expectedAnswer: string,
+    parentOptionId: string | undefined,
+    dependencyType: "visibility" | "options",
+    questionType:
+      | "single-select"
+      | "multi-select"
+      | "integer"
+      | "number"
+      | "text"
+      | "linear-scale",
+    triggerOptionId?: string
+  ) => void;
 }
 
 export const DependencyDialog: React.FC<DependencyDialogProps> = ({
   open,
   onClose,
   form,
-  setForm,
   section,
   currentQuestionForDependency,
+  handleCreateDependentQuestion,
 }) => {
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
-  const [expectedAnswer, setExpectedAnswer] = useState("");
+  const [expectedAnswer, setExpectedAnswer] = useState<string>("");
   const [dependencyType, setDependencyType] = useState<
     "visibility" | "options"
   >("visibility");
   const [targetOptions, setTargetOptions] = useState<string[]>([]);
+  const [newQuestionType, setNewQuestionType] = useState<
+    | "single-select"
+    | "multi-select"
+    | "integer"
+    | "number"
+    | "text"
+    | "linear-scale"
+  >("single-select");
+  const [triggerOptionId, setTriggerOptionId] = useState<string>("");
+
+  // Reset dialog states
+  const resetDependencyStates = () => {
+    setSelectedSectionId("");
+    setSelectedQuestionId("");
+    setExpectedAnswer("");
+    setDependencyType("visibility");
+    setTargetOptions([]);
+    setNewQuestionType("single-select");
+    setTriggerOptionId("");
+  };
+
+  // Get options for the selected question (if single-select)
+  const getSelectedQuestionOptions = (): Option[] => {
+    const selectedQuestion = form.sections
+      .find((sec) => sec.SectionId === selectedSectionId)
+      ?.questions.find((q) => q.questionId === selectedQuestionId);
+
+    return selectedQuestion?.type === "single-select"
+      ? selectedQuestion.options
+      : [];
+  };
+
+  // Handle creating a new dependent question
+  const handleCreateQuestionWithDependency = () => {
+    if (
+      !selectedSectionId ||
+      !selectedQuestionId ||
+      !expectedAnswer ||
+      !newQuestionType
+    )
+      return;
+
+    // Determine if a specific option triggers the dependency
+    let actualTriggerOptionId: string | undefined = undefined;
+    if (
+      dependencyType === "options" &&
+      getSelectedQuestionOptions().length > 0
+    ) {
+      actualTriggerOptionId = triggerOptionId;
+    }
+
+    handleCreateDependentQuestion(
+      section.SectionId,
+      selectedSectionId,
+      selectedQuestionId,
+      expectedAnswer,
+      actualTriggerOptionId,
+      dependencyType,
+      newQuestionType,
+      actualTriggerOptionId
+    );
+
+    resetDependencyStates();
+    onClose();
+  };
+
+  // Styles
+  const dependencyDialogStyles = {
+    headerTitle: {
+      color: "#2196f3",
+      marginBottom: "8px",
+    },
+    selectedDependency: {
+      backgroundColor: "#e3f2fd",
+      padding: "12px",
+      marginBottom: "16px",
+      borderRadius: "4px",
+    },
+    section: {
+      marginBottom: "24px",
+    },
+  };
+
+  useEffect(() => {
+    if (!open) {
+      resetDependencyStates();
+    }
+  }, [open]);
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        onClose();
+        resetDependencyStates();
+      }}
       maxWidth="sm"
       fullWidth
       PaperProps={{ style: { padding: "16px" } }}
@@ -76,38 +180,51 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
               {
                 form.sections
                   .find((s) => s.SectionId === selectedSectionId)
-                  ?.question.find((q) => q.questionId === selectedQuestionId)
+                  ?.questions.find((q) => q.questionId === selectedQuestionId)
                   ?.questionText
               }
             </Typography>
           </div>
         )}
 
-        {!currentQuestionForDependency && (
-          <div style={dependencyDialogStyles.section}>
-            <Typography variant="subtitle2" gutterBottom>
-              1. Select Question Type
-            </Typography>
-            <FormControl fullWidth>
-              <InputLabel>New Question Type</InputLabel>
-              <Select
-                value={newQuestionType}
-                onChange={(e) => setNewQuestionType(e.target.value as string)}
-              >
-                <MenuItem value="single-select">Single Select</MenuItem>
-                <MenuItem value="multi-select">Multi Select</MenuItem>
-                <MenuItem value="text">Text</MenuItem>
-                <MenuItem value="number">Number</MenuItem>
-                <MenuItem value="integer">Integer</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
-        )}
-
+        {/* 1. Select Question Type */}
         <div style={dependencyDialogStyles.section}>
           <Typography variant="subtitle2" gutterBottom>
-            {currentQuestionForDependency ? "1" : "2"}. Configure Dependency
+            1. Select Question Type
           </Typography>
+          <FormControl fullWidth>
+            <InputLabel>New Question Type</InputLabel>
+            <Select
+              value={newQuestionType}
+              onChange={(e) =>
+                setNewQuestionType(
+                  e.target.value as
+                    | "single-select"
+                    | "multi-select"
+                    | "integer"
+                    | "number"
+                    | "text"
+                    | "linear-scale"
+                )
+              }
+            >
+              <MenuItem value="single-select">Single Select</MenuItem>
+              <MenuItem value="multi-select">Multi Select</MenuItem>
+              <MenuItem value="text">Text</MenuItem>
+              <MenuItem value="number">Number</MenuItem>
+              <MenuItem value="integer">Integer</MenuItem>
+              <MenuItem value="linear-scale">Linear Scale</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
+
+        {/* 2. Configure Dependency */}
+        <div style={dependencyDialogStyles.section}>
+          <Typography variant="subtitle2" gutterBottom>
+            2. Configure Dependency
+          </Typography>
+
+          {/* Section Selection */}
           <FormControl fullWidth style={{ marginBottom: "16px" }}>
             <InputLabel>Select Section</InputLabel>
             <Select
@@ -118,14 +235,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
               }}
             >
               {form.sections
-                .filter((sec) => {
-                  const currentSection = form.sections.find(
-                    (s) => s.SectionId === selectedSectionId
-                  );
-                  return currentSection
-                    ? sec.order < currentSection.order
-                    : true;
-                })
+                .filter((sec) => sec.order <= section.order)
                 .map((sec) => (
                   <MenuItem key={sec.SectionId} value={sec.SectionId}>
                     {sec.sectionTitle}
@@ -134,6 +244,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
             </Select>
           </FormControl>
 
+          {/* Question Selection */}
           {selectedSectionId && (
             <FormControl fullWidth style={{ marginBottom: "16px" }}>
               <InputLabel>Select Question</InputLabel>
@@ -145,7 +256,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
               >
                 {form.sections
                   .find((sec) => sec.SectionId === selectedSectionId)
-                  ?.question.filter((q) =>
+                  ?.questions.filter((q) =>
                     ["single-select", "integer", "number"].includes(q.type)
                   )
                   .map((q) => (
@@ -157,11 +268,12 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
             </FormControl>
           )}
 
+          {/* Expected Answer Input */}
           {selectedQuestionId && (
             <>
               {form.sections
                 .find((sec) => sec.SectionId === selectedSectionId)
-                ?.question.find((q) => q.questionId === selectedQuestionId)
+                ?.questions.find((q) => q.questionId === selectedQuestionId)
                 ?.type === "single-select" ? (
                 <FormControl fullWidth style={{ marginBottom: "16px" }}>
                   <InputLabel>Expected Answer</InputLabel>
@@ -196,32 +308,32 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
           )}
         </div>
 
+        {/* 3. Configure Trigger Option (if dependencyType is "options") */}
         {dependencyType === "options" &&
-          currentQuestionForDependency?.type === "single-select" && (
+          form.sections
+            .find((sec) => sec.SectionId === selectedSectionId)
+            ?.questions.find((q) => q.questionId === selectedQuestionId)
+            ?.type === "single-select" && (
             <div style={dependencyDialogStyles.section}>
               <Typography variant="subtitle2" gutterBottom>
-                {currentQuestionForDependency ? "2" : "3"}. Configure Options
+                3. Configure Trigger Option
               </Typography>
-              {currentQuestionForDependency.options.map((option) => (
-                <FormControlLabel
-                  key={option.optionId}
-                  control={
-                    <Checkbox
-                      checked={targetOptions.includes(option.value)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setTargetOptions([...targetOptions, option.value]);
-                        } else {
-                          setTargetOptions(
-                            targetOptions.filter((opt) => opt !== option.value)
-                          );
-                        }
-                      }}
-                    />
-                  }
-                  label={option.value}
-                />
-              ))}
+              <FormControl fullWidth>
+                <InputLabel>Select Trigger Option</InputLabel>
+                <Select
+                  value={triggerOptionId}
+                  onChange={(e) => setTriggerOptionId(e.target.value as string)}
+                >
+                  {getSelectedQuestionOptions().map((option) => (
+                    <MenuItem key={option.optionId} value={option.optionId}>
+                      {option.value}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <Typography variant="caption" color="textSecondary">
+                  Select the option that will trigger this dependency
+                </Typography>
+              </FormControl>
             </div>
           )}
       </DialogContent>
@@ -236,21 +348,15 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
           Cancel
         </Button>
         <Button
-          onClick={() => {
-            if (currentQuestionForDependency) {
-              handleAddDependency();
-            } else {
-              handleAddQuestionWithDependency();
-            }
-          }}
+          onClick={handleCreateQuestionWithDependency}
           color="primary"
           disabled={
             !selectedQuestionId ||
             !expectedAnswer ||
-            (dependencyType === "options" && targetOptions.length === 0)
+            (dependencyType === "options" && !triggerOptionId)
           }
         >
-          {currentQuestionForDependency ? "Add Dependency" : "Create Question"}
+          Create Question
         </Button>
       </DialogActions>
     </Dialog>

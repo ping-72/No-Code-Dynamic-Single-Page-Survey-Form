@@ -43,7 +43,7 @@ export interface Section {
   formId: string;
   sectionTitle: string;
   description?: string;
-  question: Question[];
+  questions: Question[];
   order: number;
   createdAt: string;
 }
