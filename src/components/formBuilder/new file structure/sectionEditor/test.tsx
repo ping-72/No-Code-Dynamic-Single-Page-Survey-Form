@@ -1,12 +1,8 @@
+// src/components/SectionEditor.tsx
+
 import React, { useState } from "react";
-import { FormController } from "../formController/formcontroller";
-import { Delete } from "@material-ui/icons";
+import { Delete, Add } from "@material-ui/icons";
 import { useStyles } from "../formbuilderStyle";
-import { SectionController } from "../formController/sectionController";
-import { QuestionController } from "../formController/questionController";
-import { OptionController } from "../formController/optioncontroller";
-import Snackbar from "@material-ui/core";
-import { Alert } from "@material-ui/core";
 import { DependencyDialog } from "./sectionEditor/dependencyDialog";
 import {
   DependencyCondition,
@@ -29,7 +25,11 @@ import {
   Radio,
   Checkbox,
   Typography,
+  Snackbar,
 } from "@material-ui/core";
+import { Alert } from "@material-ui/lab";
+import { QuestionController } from "../formController/QuestionController";
+import { OptionController } from "../formController/OptionController";
 
 interface SectionEditorProps {
   form: Form;
@@ -37,91 +37,99 @@ interface SectionEditorProps {
   section: Section;
   responses: Record<string, string>;
   handleDeleteSection: (sectionId: string) => void;
-  handleUpdateSectionTitle: (sectionId: string, title: string) => void;
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = ({
   form,
   setForm,
   section,
-  handleDeleteSection,
-  handleUpdateSectionTitle,
   responses,
+  handleDeleteSection,
 }) => {
   const classes = useStyles();
 
+  // State for managing dependency dialog
+  const [dependencyDialogOpen, setDependencyDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  }>({ open: false, message: "", severity: "success" });
 
-  const [title, setTitle] = useState(section.sectionTitle);
-  const [dependencyDialogOpen, setDependencyDialogOpen] = useState(false);
-  const [selectedSectionId, setSelectedSectionId] = useState<string>("");
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
-  const [expectedAnswer, setExpectedAnswer] = useState<string>("");
-  const [dependencyType, setDependencyType] = useState<
-    "visibility" | "options"
-  >("visibility");
-  const [targetOptions, setTargetOptions] = useState<string[]>([]);
-  const [newQuestionType, setNewQuestionType] = useState<
-    | "single-select"
-    | "multi-select"
-    | "integer"
-    | "number"
-    | "text"
-    | "linear-scale"
-  >("single-select");
+  // Styles
+  const questionStyles = {
+    independent: {
+      backgroundColor: "#f5f7fa",
+      border: "1px solid #e0e0e0",
+      borderLeft: "4px solid #4caf50", // green border for independent questions
+      padding: "16px",
+      marginBottom: "16px",
+      borderRadius: "4px",
+    },
+    dependent: {
+      backgroundColor: "#f3f7fa",
+      border: "1px solid #e0e0e0",
+      borderLeft: "4px solid #2196f3", // blue border for dependent questions
+      padding: "16px",
+      marginBottom: "16px",
+      borderRadius: "4px",
+    },
+    questionBadge: {
+      padding: "4px 8px",
+      borderRadius: "4px",
+      fontSize: "0.75rem",
+      fontWeight: 500,
+      marginBottom: "8px",
+      display: "inline-block",
+    },
+    independentBadge: {
+      backgroundColor: "#4caf50",
+      color: "white",
+    },
+    dependentBadge: {
+      backgroundColor: "#2196f3",
+      color: "white",
+    },
+  };
 
+  // Open dependency dialog for creating a dependent question
+  const openDependencyDialog = () => {
+    setDependencyDialogOpen(true);
+  };
+
+  // Close dependency dialog
+  const closeDependencyDialog = () => {
+    setDependencyDialogOpen(false);
+  };
+
+  // Handle creating a new dependent question
   const handleCreateDependentQuestion = (
-    targetSectionId: string,
-    parentSectionId: string,
-    parentQuestionId: string,
-    expectedAnswer: string,
-    parentOptionId: string | undefined,
-    dependencyType: "visibility" | "options",
-    questionType: QuestionType,
-    triggerOptionId?: string
+    dependency: DependencyCondition,
+    questionType: QuestionType
   ) => {
-    // Construct the DependencyCondition object
-    const dependency: DependencyCondition = {
-      targetSectionId,
-      parentSectionId,
-      parentQuestionId,
-      expectedAnswer,
-      parentOptionId,
-      dependencyType,
-      triggerOptionId,
-    };
-
     try {
-      // Add the dependent question using the controller
-      const updatedForm = QuestionController.addDependentQuestion(
+      const updatedForm = QuestionController.addQuestion(
         form,
         section.SectionId,
         [dependency]
       );
+
       setForm(updatedForm);
       setSnackbar({
         open: true,
-        message: "Dependent question created successfully",
+        message: "Dependent question added successfully.",
         severity: "success",
       });
-      setDependencyDialogOpen(false); // Close the dialog upon success
-    } catch (err: any) {
+    } catch (error: any) {
       setSnackbar({
         open: true,
-        message: `Error creating question: ${err.message}`,
+        message: `Error adding dependent question: ${error.message}`,
         severity: "error",
       });
     }
   };
 
+  // Handle updating question title
   const handleUpdateQuestionTitle = (
     questionId: string,
     questionText: string
@@ -133,39 +141,22 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         questionId,
         questionText
       );
-
       setForm(updatedForm);
       setSnackbar({
         open: true,
-        message: "Question title updated successfully",
+        message: "Question title updated successfully.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (error: any) {
       setSnackbar({
         open: true,
-        message: `Error updating question title: ${err.message}`,
+        message: `Error updating question title: ${error.message}`,
         severity: "error",
       });
     }
   };
 
-  const handleAddQuestion = (sectionId: string) => {
-    try {
-      const updatedForm = QuestionController.addQuestion(form, sectionId, []);
-      setForm(updatedForm);
-      setSnackbar({
-        open: true,
-        message: "Question added successfully",
-        severity: "success",
-      });
-    } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: `Error adding question: ${err.message}`,
-        severity: "error",
-      });
-    }
-  };
+  // Handle updating question type
   const handleUpdateQuestionType = (
     questionId: string,
     newType: QuestionType
@@ -192,6 +183,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     }
   };
 
+  // Handle deleting a question
   const handleDeleteQuestion = (questionId: string) => {
     try {
       const question = section.questions.find(
@@ -234,12 +226,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     }
   };
 
+  // Handle adding an option to a question
   const handleAddOption = (questionId: string) => {
     try {
       const updatedForm = OptionController.addOption(
         form,
         section.SectionId,
-        questionId
+        questionId,
+        "New Option"
       );
       setForm(updatedForm);
       setSnackbar({
@@ -256,6 +250,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     }
   };
 
+  // Handle updating an option's value
   const handleUpdateOptionValue = (
     questionId: string,
     optionId: string,
@@ -284,6 +279,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     }
   };
 
+  // Handle deleting an option
   const handleDeleteOption = (questionId: string, optionId: string) => {
     try {
       const updatedForm = OptionController.deleteOption(
@@ -307,7 +303,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     }
   };
 
-  const handleUpdateScaleRange = (questionId: string, range: 5 | 10) => {
+  // Handle updating scale range for linear-scale questions
+  const handleUpdateScaleRange = (
+    questionId: string,
+    range: 5 | 10
+  ) => {
     try {
       const updatedForm = QuestionController.updateAnswerType(
         form,
@@ -348,137 +348,30 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     }
   };
 
+  // Compute eligible dependency questions from earlier sections
   const eligibleDependencies = form.sections
-    .filter((sec) => sec.order <= section.order)
+    .filter((sec) => sec.order < section.order) // Only earlier sections
     .flatMap((sec) => sec.questions)
-    .filter((q) =>
-      ["number", "linear-scale", "integer", "single-select"].includes(q.type)
+    .filter((q) => ["single-select", "integer", "number"].includes(q.type));
+
+  // Get dependency information for display
+  const getDependencyInfo = (dependencies?: DependencyCondition[]) => {
+    if (!dependencies?.length) return null;
+
+    const dep = dependencies[0]; // Show first dependency for simplicity
+    const dependentSection = form.sections.find((sec) =>
+      sec.questions.some((q) => q.questionId === dep.questionId)
     );
-
-  const getDependencyInfo = (
-    dependentOn?: DependencyCondition[]
-  ): {
-    sectionName: string;
-    questionText: string;
-    expectedAnswer: string;
-    type: "visibility" | "options";
-  } | null => {
-    if (!dependentOn || dependentOn.length === 0) return null;
-
-    console.log("Dependent on ", dependentOn);
-
-    const dep = dependentOn[0];
-    console.log("Dep on ", dep);
-
-    if (!form.sections || !Array.isArray(form.sections)) {
-      console.error("Form sections are undefined or not an array.");
-      return null;
-    }
-
-    const dependentSection = form.sections.find(
-      (s) => s.SectionId === dep.sectionId
-    );
-
-    if (!dependentSection) {
-      console.warn(`Section with ID ${dep.sectionId} not found.`);
-      return null;
-    }
-
-    console.log("Dep section ", dependentSection);
-
-    if (
-      !dependentSection.questions ||
-      !Array.isArray(dependentSection.questions)
-    ) {
-      console.error(
-        "Dependent section questions are undefined or not an array."
-      );
-      return null;
-    }
-
-    const dependentQuestion = dependentSection.questions.find(
+    const dependentQuestion = dependentSection?.questions.find(
       (q) => q.questionId === dep.questionId
     );
 
-    if (!dependentQuestion) {
-      console.warn(
-        `Question with ID ${dep.questionId} not found in section ${dep.sectionId}.`
-      );
-      return null;
-    }
-
-    console.log(
-      "Question is ",
-      dependentQuestion,
-      " section is ",
-      dependentSection
-    );
-
-    console.log("sectionName ", dependentSection.sectionTitle);
-    console.log("questionText ", dependentQuestion.questionText);
-    console.log("expectedAnswer ", dep.expectedAnswer);
-    console.log("type ", dep.dependencyType);
-
     return {
-      sectionName: dependentSection.sectionTitle,
-      questionText: dependentQuestion.questionText,
+      sectionName: dependentSection?.sectionTitle || "",
+      questionText: dependentQuestion?.questionText || "",
       expectedAnswer: dep.expectedAnswer,
       type: dep.dependencyType,
     };
-  };
-
-  const questionStyles = {
-    independent: {
-      backgroundColor: "#f5f7fa",
-      border: "1px solid #e0e0e0",
-      borderLeft: "4px solid #4caf50", // green border for independent questions
-    },
-    dependent: {
-      backgroundColor: "#f3f7fa",
-      borderLeft: "4px solid #2196f3", // blue border for dependent questions
-    },
-    questionBadge: {
-      padding: "4px 8px",
-      borderRadius: "4px",
-      fontSize: "0.75rem",
-      fontWeight: 500,
-      marginBottom: "8px",
-      display: "inline-block",
-    },
-    independentBadge: {
-      backgroundColor: "#4caf50",
-      color: "white",
-    },
-    dependentBadge: {
-      backgroundColor: "#2196f3",
-      color: "white",
-    },
-  };
-
-  // Open dependency dialog for creating a dependent question
-  const openDependencyDialog = () => {
-    setDependencyDialogOpen(true);
-  };
-
-  const getLikertLabels = (range: 5): { value: number; label: string }[] => {
-    return [
-      { value: 1, label: "Strongly Disagree" },
-      { value: 2, label: "Disagree" },
-      { value: 3, label: "Neutral" },
-      { value: 4, label: "Agree" },
-      { value: 5, label: "Strongly Agree" },
-    ];
-  };
-
-  // Get options for the selected question (if single-select)
-  const getSelectedQuestionOptions = () => {
-    const selectedQuestion = form.sections
-      .find((sec) => sec.SectionId === selectedSectionId)
-      ?.questions.find((q) => q.questionId === selectedQuestionId);
-
-    return selectedQuestion?.type === "single-select"
-      ? selectedQuestion.options
-      : [];
   };
 
   return (
@@ -489,7 +382,19 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             label="Section Title"
             value={section.sectionTitle}
             onChange={(e) =>
-              handleUpdateSectionTitle(section.SectionId, e.target.value)
+              // Update section title
+              setForm((prevForm) =>
+                {
+                  const updatedForm = { ...prevForm };
+                  updatedForm.sections = updatedForm.sections.map((sec) =>
+                    sec.SectionId === section.SectionId
+                      ? { ...sec, sectionTitle: e.target.value }
+                      : sec
+                  );
+                  updatedForm.updatedAt = new Date().toISOString();
+                  return updatedForm;
+                }
+              )
             }
             fullWidth
             className={classes.sectionTitleInput}
@@ -501,64 +406,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
           startIcon={<Delete />}
           onClick={() => handleDeleteSection(section.SectionId)}
         >
-          Section
+          Delete Section
         </Button>
       </div>
       <br />
       <br />
-
-      {section.sectionTitle.toLowerCase().includes("introduction") && (
-        <div>
-          <TextField
-            label="Form Title"
-            fullWidth
-            value={form.formTitle}
-            margin="normal"
-            onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                formTitle: e.target.value,
-                updatedAt: new Date().toISOString(),
-              }))
-            }
-          />
-          <TextField
-            label="Form Description"
-            fullWidth
-            value={form.description}
-            margin="normal"
-            onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                description: e.target.value,
-                updatedAt: new Date().toISOString(),
-              }))
-            }
-            multiline
-          />
-          <input
-            accept="image/*"
-            style={{ display: "none" }}
-            id="upload-image"
-            type="file"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                  console.log(ev.target?.result);
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-          />
-          <label htmlFor="upload-image">
-            <Button variant="contained" color="primary" component="span">
-              Upload Image
-            </Button>
-          </label>
-        </div>
-      )}
 
       {/* Render questions */}
       {section &&
@@ -569,9 +421,9 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             elevation={2}
             className={classes.questionPaper}
             style={{
-              ...(!ques.dependentOn?.length
-                ? questionStyles.independent
-                : questionStyles.dependent),
+              ...(ques.dependencies?.length
+                ? questionStyles.dependent
+                : questionStyles.independent),
             }}
           >
             {/* Question Type Badge */}
@@ -579,19 +431,19 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
               <span
                 style={{
                   ...questionStyles.questionBadge,
-                  ...(ques.dependentOn?.length
+                  ...(ques.dependencies?.length
                     ? questionStyles.dependentBadge
                     : questionStyles.independentBadge),
                 }}
               >
-                {ques.dependentOn?.length
+                {ques.dependencies?.length
                   ? "Dependent Question"
                   : "Independent Question"}
               </span>
             </div>
 
             {/* Add dependency info at the top if question has dependencies */}
-            {ques.dependentOn?.length > 0 && (
+            {ques.dependencies?.length > 0 && (
               <div
                 style={{
                   padding: "8px",
@@ -602,10 +454,15 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 }}
               >
                 {(() => {
-                  const info = getDependencyInfo(ques.dependentOn);
+                  const info = getDependencyInfo(ques.dependencies);
                   return (
                     <>
-                      {/* // tthis is not showing */}
+                      <Typography
+                        variant="subtitle2"
+                        style={{ color: "#2196f3" }}
+                      >
+                        Dependent Question
+                      </Typography>
                       <div style={{ marginTop: "4px" }}>
                         <strong>Shows when:</strong> {info?.sectionName} →{" "}
                         {info?.questionText} = {info?.expectedAnswer}
@@ -616,14 +473,16 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 })()}
               </div>
             )}
-
             <Grid container spacing={2} className={classes.questionRow}>
               <Grid item xs={12} sm={8}>
                 <TextField
                   label="Question Text"
                   value={ques.questionText}
                   onChange={(e) =>
-                    handleUpdateQuestionTitle(ques.questionId, e.target.value)
+                    handleUpdateQuestionTitle(
+                      ques.questionId,
+                      e.target.value
+                    )
                   }
                   fullWidth
                 />
@@ -657,45 +516,43 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             <div>
               {["single-select", "multi-select"].includes(ques.type) && (
                 <>
-                  {ques.options
-                    // .filter((opt) => shouldDisplayOption(opt, responses))
-                    .map((option) => (
-                      <div
-                        key={option.optionId}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          marginBottom: "8px",
-                        }}
+                  {ques.options.map((option) => (
+                    <div
+                      key={option.optionId}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      {ques.type === "single-select" ? (
+                        <Radio disabled style={{ marginRight: "8px" }} />
+                      ) : (
+                        <Checkbox disabled style={{ marginRight: "8px" }} />
+                      )}
+                      <TextField
+                        label="Option"
+                        value={option.value}
+                        onChange={(e) =>
+                          handleUpdateOptionValue(
+                            ques.questionId,
+                            option.optionId,
+                            e.target.value
+                          )
+                        }
+                        fullWidth
+                        margin="dense"
+                      />
+                      <IconButton
+                        aria-label="delete-option"
+                        onClick={() =>
+                          handleDeleteOption(ques.questionId, option.optionId)
+                        }
                       >
-                        {ques.type === "single-select" ? (
-                          <Radio disabled style={{ marginRight: "8px" }} />
-                        ) : (
-                          <Checkbox disabled style={{ marginRight: "8px" }} />
-                        )}
-                        <TextField
-                          label="Option"
-                          value={option.value}
-                          onChange={(e) =>
-                            handleUpdateOptionValue(
-                              ques.questionId,
-                              option.optionId,
-                              e.target.value
-                            )
-                          }
-                          fullWidth
-                          margin="dense"
-                        />
-                        <IconButton
-                          aria-label="delete-option"
-                          onClick={() =>
-                            handleDeleteOption(ques.questionId, option.optionId)
-                          }
-                        >
-                          <Delete />
-                        </IconButton>
-                      </div>
-                    ))}
+                        <Delete />
+                      </IconButton>
+                    </div>
+                  ))}
                   <div
                     style={{
                       display: "flex",
@@ -706,9 +563,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                     <Button
                       variant="outlined"
                       color="primary"
+                      startIcon={<Add />}
                       onClick={() => handleAddOption(ques.questionId)}
                     >
-                      Add Options
+                      Add Option
                     </Button>
                   </div>
                 </>
@@ -761,39 +619,44 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                       gap: "8px",
                     }}
                   >
-                    {getLikertLabels(ques.scaleRange || 5).map(
-                      ({ value, label }) => (
-                        <div
-                          key={value}
+                    {Array.from(
+                      { length: ques.scaleRange || 5 },
+                      (_, i) => i + 1
+                    ).map((value) => (
+                      <div
+                        key={value}
+                        style={{
+                          textAlign: "center",
+                          minWidth: "80px",
+                          flex: "1",
+                        }}
+                      >
+                        <Radio disabled />
+                        <div>{value}</div>
+                        <Typography
+                          variant="caption"
                           style={{
-                            textAlign: "center",
-                            minWidth: "80px",
-                            flex: "1",
+                            display: "block",
+                            minHeight: "40px",
+                            fontSize:
+                              ques.scaleRange === 10 ? "0.7rem" : "0.75rem",
                           }}
                         >
-                          <Radio disabled />
-                          <div>{value}</div>
-                          <Typography
-                            variant="caption"
-                            style={{
-                              display: "block",
-                              minHeight: "40px",
-                              fontSize:
-                                ques.scaleRange === 10 ? "0.7rem" : "0.75rem",
-                            }}
-                          >
-                            {label}
-                          </Typography>
-                        </div>
-                      )
-                    )}
+                          {value === 1
+                            ? "Strongly Disagree"
+                            : value === 5
+                            ? "Strongly Agree"
+                            : ""}
+                        </Typography>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
             <div style={{ marginTop: 16 }}>
               <Button
-                variant="outlined"
+                variant="contained"
                 color="secondary"
                 startIcon={<Delete />}
                 onClick={() => handleDeleteQuestion(ques.questionId)}
@@ -808,29 +671,69 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         <Button
           variant="outlined"
           color="primary"
-          onClick={() => handleAddQuestion(section.SectionId)}
+          startIcon={<Add />}
+          onClick={openDependencyDialog}
           className={classes.addQuestionBtn}
         >
-          Add Question
+          Add Dependent Question
         </Button>
         <Button
           variant="outlined"
-          color="secondary"
-          onClick={openDependencyDialog}
+          color="primary"
+          startIcon={<Add />}
+          onClick={() => {
+            // Add independent question
+            try {
+              const updatedForm = QuestionController.addQuestion(
+                form,
+                section.SectionId
+              );
+              setForm(updatedForm);
+              setSnackbar({
+                open: true,
+                message: "Independent question added successfully.",
+                severity: "success",
+              });
+            } catch (error: any) {
+              setSnackbar({
+                open: true,
+                message: `Error adding question: ${error.message}`,
+                severity: "error",
+              });
+            }
+          }}
         >
-          Add Dependent Question
+          Add Independent Question
         </Button>
       </div>
 
       {/* Dependency Dialog */}
       <DependencyDialog
         open={dependencyDialogOpen}
-        onClose={() => setDependencyDialogOpen(false)}
+        onClose={closeDependencyDialog}
         form={form}
         section={section}
-        currentQuestionForDependency={null}
         handleCreateDependentQuestion={handleCreateDependentQuestion}
-      ></DependencyDialog>
-    </Paper>
-  );
-};
+        eligibleDependencies={eligibleDependencies}
+      />
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() =>
+          setSnackbar((prev) => ({ ...prev, open: false }))
+        }
+      >
+        <Alert
+          onClose={() =>
+            setSnackbar((prev) => ({ ...prev, open: false }))
+          }
+          severity={snackbar.severity}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    };

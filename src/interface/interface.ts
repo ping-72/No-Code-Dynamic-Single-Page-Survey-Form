@@ -6,7 +6,13 @@ export interface DependencyCondition {
   dependencyType: "visibility" | "options";
   targetOptions?: string[]; // Change from string to string[]
 }
-
+export type QuestionType =
+  | "single-select"
+  | "multi-select"
+  | "integer"
+  | "number"
+  | "text"
+  | "linear-scale";
 export interface Option {
   optionId: string;
   questionId: string;
@@ -18,13 +24,7 @@ export interface Question {
   questionId: string;
   sectionId: string;
   questionText: string;
-  type:
-    | "single-select"
-    | "multi-select"
-    | "integer"
-    | "number"
-    | "text"
-    | "linear-scale";
+  type: QuestionType;
   isRequired: boolean;
   dependencies?: DependencyCondition[];
   dependentOn?: DependencyCondition[];

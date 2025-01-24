@@ -113,7 +113,7 @@ export class FormController {
         : "New Question",
       type: "single-select",
       isRequired: true,
-      dependencies: dependency || [],
+      dependentOn: dependency || [],
       order:
         form.sections.find((s) => s.SectionId === sectionId)?.questions
           .length || 0,
