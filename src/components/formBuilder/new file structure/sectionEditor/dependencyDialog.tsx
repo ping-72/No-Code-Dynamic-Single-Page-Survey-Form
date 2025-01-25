@@ -1,4 +1,3 @@
-// src/components/SectionEditor/DependencyDialog.tsx
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -69,7 +68,6 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
   >("single-select");
   const [triggerOptionId, setTriggerOptionId] = useState<string>("");
 
-  // Reset dialog states
   const resetDependencyStates = () => {
     setSelectedSectionId("");
     setSelectedQuestionId("");
@@ -80,7 +78,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     setTriggerOptionId("");
   };
 
-  // Get options for the selected question (if single-select)
+  // options for the selected question (if single-select)
   const getSelectedQuestionOptions = (): Option[] => {
     const selectedQuestion = form.sections
       .find((sec) => sec.SectionId === selectedSectionId)

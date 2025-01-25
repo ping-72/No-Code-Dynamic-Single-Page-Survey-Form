@@ -1,3 +1,4 @@
+import { Section } from "./../../../interface/interface";
 import {
   Form,
   DependencyCondition,
@@ -312,7 +313,29 @@ export class QuestionController {
       );
     }
 
-    // Step 2: Check if options are empty
+    // Step 2: Check dependencies based on newType
+    // Example: If changing to a type that doesn't support options, ensure no options have dependencies
+    if (!["single-select", "multi-select"].includes(newType)) {
+      if (question.options.length > 0) {
+        const optionsWithDependencies = question.options.filter(
+          (opt) => opt.dependencies && opt.dependencies.length > 0
+        );
+        if (optionsWithDependencies.length > 0) {
+          const dependentOptionDescriptions = optionsWithDependencies
+            .map(
+              (opt, index) =>
+                `${index + 1}. Option "${opt.value || "Table Option"}"`
+            )
+            .join("\n");
+
+          throw new Error(
+            `Cannot update the answer type of "${question.questionText}" to "${newType}" because the following options have dependencies:\n${dependentOptionDescriptions}\nPlease remove these dependencies or delete the options first.`
+          );
+        }
+      }
+    }
+
+    // Step 3: Check if options are empty
     if (question.options.length === 0) {
       // No options, safe to update
     } else {
@@ -332,7 +355,7 @@ export class QuestionController {
       // Else, options exist but have no dependencies, safe to update
     }
 
-    // Step 3: Update the answer type
+    // Step 4: Update the answer type
     const updatedForm: Form = {
       ...form,
       sections: form.sections.map((sec) => {
@@ -359,6 +382,42 @@ export class QuestionController {
     };
 
     return updatedForm;
+  }
+
+  static addRangeDependency(
+    form: Form,
+    sectionID: string,
+    questionID: string,
+    range: Range
+  ): Form {
+    const updatedForm: Form = {
+      ...form,
+      sections: form.sections.map((sec) => {
+        if (sec.SectionId !== sectionID) return sec;
+        return {
+          ...sec,
+          questions: sec.questions.map((q) => {
+            if (q.questionId !== questionID) return q;
+            return {
+              ...q,
+              range: range,
+            };
+          }),
+        };
+      }),
+      updatedAt: new Date().toISOString(),
+    };
+    return updatedForm;
+  }
+
+  // not required here, only required in frontend
+  static shouldDisplayQuestion(
+    dependencies: DependencyCondition[] | undefined,
+    responses: Record<string, any>
+  ): boolean {
+    if (!dependencies || dependencies.length === 0) return true;
+
+    return true;
   }
 
   //

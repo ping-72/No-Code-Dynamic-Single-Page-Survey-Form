@@ -1,10 +1,13 @@
+import { OptionType } from "./interface";
 export interface DependencyCondition {
   sectionId?: string;
   questionId: string;
-  expectedAnswer: string;
+  expectedAnswer?: string;
   questionText?: string; // Added to show question text in selector
   dependencyType: "visibility" | "options";
-  targetOptions?: string[]; // Change from string to string[]
+  triggerOptionId?: string;
+  range?: Range[];
+  targetOptions?: string[];
 }
 export type QuestionType =
   | "single-select"
@@ -13,10 +16,18 @@ export type QuestionType =
   | "number"
   | "text"
   | "linear-scale";
+
+export type OptionType = "normal" | "table";
+
 export interface Option {
   optionId: string;
   questionId: string;
-  value: string;
+  type: OptionType;
+  value?: string;
+  tableData?: {
+    rows: Attribute[];
+    columns: string[];
+  };
   dependencies?: DependencyCondition[];
 }
 
@@ -56,4 +67,31 @@ export interface Form {
   createdAt: string;
   updatedAt: string;
   sections: Section[];
+}
+
+export interface Range {
+  minValue?: number;
+  maxValue?: number;
+}
+
+// Table implementation
+export interface TableOption {
+  optionId: string;
+  questionId: string;
+  type: "table";
+  tableData: {
+    rows: Attribute[];
+    columns: string[];
+  };
+  dependencies?: DependencyCondition[];
+}
+
+export interface Attribute {
+  attributeId: string;
+  attributeName: string;
+  value: string | number | FunctionDependency;
+}
+export interface FunctionDependency {
+  type: "function";
+  expression: string; // JavaScript expression that is to be convererted to ans through mathjs
 }
