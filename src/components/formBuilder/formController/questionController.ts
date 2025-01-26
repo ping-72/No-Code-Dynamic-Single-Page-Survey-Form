@@ -219,8 +219,7 @@ export class QuestionController {
     }
 
     // Step 2: Check if the question is dependent
-    const isDependent =
-      question.dependencies && question.dependencies.length > 0;
+    const isDependent = question.dependentOn && question.dependentOn.length > 0;
     if (!isDependent) {
       throw new Error(
         `Question '${question.questionText}' is not a dependent question and cannot be deleted as such.`
@@ -229,9 +228,9 @@ export class QuestionController {
 
     // Step 3: Check if the question still has dependencies to remove
     // @ts-ignore
-    if (question.dependentOn.length > 0) {
+    if (question.dependencies && question.dependencies.length > 0) {
       // @ts-ignore
-      const dependencyDescriptions = question.dependentOn
+      const dependencyDescriptions = question.dependencies
         .map((dep, index) => {
           const depSection = form.sections.find(
             (sec) => sec.SectionId === dep.sectionId

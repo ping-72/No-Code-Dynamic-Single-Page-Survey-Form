@@ -160,6 +160,7 @@ const FormBuilder: React.FC = () => {
         severity: "error",
       });
     }
+    setActiveSection(form.sections.length);
     // setForm((prev) => FormController.deleteSection(prev, sectionId));
   };
 
