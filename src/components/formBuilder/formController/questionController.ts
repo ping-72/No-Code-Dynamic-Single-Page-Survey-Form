@@ -8,17 +8,11 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 export class QuestionController {
-  static addQuestion(
-    form: Form,
-    sectionId: string,
-    dependency?: DependencyCondition[]
-  ): Form {
+  static addQuestion(form: Form, sectionId: string): Form {
     const newQuestion: Question = {
       questionId: uuidv4(),
       sectionId,
-      questionText: dependency
-        ? `[Dependent] New question based on ${dependency[0]?.questionText}`
-        : "New Question",
+      questionText: "New Question",
       type: "single-select",
       isRequired: true,
       order:
@@ -225,7 +219,8 @@ export class QuestionController {
     }
 
     // Step 2: Check if the question is dependent
-    const isDependent = question.dependentOn && question.dependentOn.length > 0;
+    const isDependent =
+      question.dependencies && question.dependencies.length > 0;
     if (!isDependent) {
       throw new Error(
         `Question '${question.questionText}' is not a dependent question and cannot be deleted as such.`
@@ -410,13 +405,74 @@ export class QuestionController {
     return updatedForm;
   }
 
-  // not required here, only required in frontend
+  static addDependency(
+    form: Form,
+    sectionID: string,
+    questionID: string,
+    dependency: DependencyCondition
+  ): Form {
+    return {
+      ...form,
+      sections: form.sections.map((sec) => {
+        if (sec.SectionId !== sectionID) return sec;
+        return {
+          ...sec,
+          questions: sec.questions.map((q) => {
+            if (q.questionId !== questionID) return q;
+            return {
+              ...q,
+              dependencies: q.dependencies
+                ? [...q.dependencies, dependency]
+                : [dependency],
+            };
+          }),
+        };
+      }),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   static shouldDisplayQuestion(
-    dependencies: DependencyCondition[] | undefined,
+    form: Form,
+    sectionId: string,
+    question: Question,
     responses: Record<string, any>
   ): boolean {
-    if (!dependencies || dependencies.length === 0) return true;
+    if (!question.dependencies || question.dependencies.length === 0) {
+      return true;
+    }
 
+    return question.dependencies.every((dep) => {
+      const prevAnswer = responses[dep.questionId];
+      if (dep.expectedAnswer !== undefined) {
+        return prevAnswer === dep.expectedAnswer;
+      }
+      if (dep.range !== undefined && typeof prevAnswer === "number") {
+        // check for all the ranges
+        const { minValue, maxValue } = dep.range[0];
+        if (minValue !== undefined && prevAnswer < minValue) return false;
+        if (maxValue !== undefined && prevAnswer > maxValue) return false;
+        return true;
+      }
+      return false;
+    });
+  }
+
+  // not required here, only required in frontend
+  static evaluateDepencency(
+    dependency: DependencyCondition,
+    previousAnswer: string | number
+  ): boolean {
+    if (dependency.expectedAnswer !== undefined)
+      return dependency.expectedAnswer === previousAnswer;
+
+    if (dependency.range !== undefined && typeof previousAnswer === "number") {
+      // Modify the below to check everthing in from index 0 to n-1
+      const { minValue, maxValue } = dependency.range[0];
+      if (minValue !== undefined && previousAnswer < minValue) return false;
+      if (maxValue !== undefined && previousAnswer > maxValue) return false;
+      return true;
+    }
     return true;
   }
 

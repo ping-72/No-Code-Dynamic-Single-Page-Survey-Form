@@ -1,3 +1,4 @@
+import { OptionType, TableData } from "./../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
 import {
   Attribute,
@@ -7,7 +8,13 @@ import {
 } from "../../../interface/interface";
 
 export class OptionController {
-  static addOption(form: Form, sectionId: string, questionId: string): Form {
+  static addOption(
+    form: Form,
+    sectionId: string,
+    questionId: string,
+    type: OptionType,
+    value?: string
+  ): Form {
     // Step 1: Identify the section and question
     const section = form.sections.find((sec) => sec.SectionId === sectionId);
     if (!section) {
@@ -26,8 +33,10 @@ export class OptionController {
       questionId,
       value: "New Option",
       dependencies: [],
-      type: "normal",
+      type,
     };
+    if (!value) throw new Error("Value is required for normal option");
+    else newOption.value = value;
 
     // Step 3: Add the new option to the question's options array
     const updatedForm: Form = {
@@ -57,10 +66,13 @@ export class OptionController {
     questionId: string,
     optionId: string
   ): Form {
+    console.log("AddOptions is called");
     // Step 1: Identify the section, question, and option
     const section = form.sections.find((sec) => sec.SectionId === sectionId);
     if (!section) {
-      throw new Error(`Section with ID '${sectionId}' not found.`);
+      throw new Error(
+        `Reached Here. Section with ID '${sectionId}' not found.`
+      );
     }
     const question = section.questions.find((q) => q.questionId === questionId);
     if (!question) {
@@ -89,7 +101,7 @@ export class OptionController {
           q.dependencies.forEach((dep) => {
             if (
               dep.dependencyType === "options" &&
-              dep.targetOptions?.includes(option.value)
+              dep.targetOptions?.includes(option.value || "")
             ) {
               dependentItems.push({
                 sectionTitle: sec.sectionTitle,
@@ -106,7 +118,7 @@ export class OptionController {
             opt.dependencies.forEach((dep) => {
               if (
                 dep.dependencyType === "options" &&
-                dep.targetOptions?.includes(option.value)
+                dep.targetOptions?.includes(option.value || "")
               ) {
                 dependentItems.push({
                   sectionTitle: sec.sectionTitle,

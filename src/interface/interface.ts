@@ -1,4 +1,3 @@
-import { OptionType } from "./interface";
 export interface DependencyCondition {
   sectionId?: string;
   questionId: string;
@@ -24,10 +23,7 @@ export interface Option {
   questionId: string;
   type: OptionType;
   value?: string;
-  tableData?: {
-    rows: Attribute[];
-    columns: string[];
-  };
+  tableData?: TableData;
   dependencies?: DependencyCondition[];
 }
 
@@ -93,5 +89,10 @@ export interface Attribute {
 }
 export interface FunctionDependency {
   type: "function";
-  expression: string; // JavaScript expression that is to be convererted to ans through mathjs
+  expression: string; // JavaScript expression that is to be converted to ans through mathjs
+}
+
+export interface TableData {
+  rows: Attribute[];
+  columns: string[];
 }
