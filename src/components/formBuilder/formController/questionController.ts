@@ -45,7 +45,13 @@ export class QuestionController {
       questionId: uuidv4(),
       sectionId,
       questionText: dependency
-        ? `[Dependent] New question based on ${dependency[0]?.questionText}`
+        ? `[Dependent] New question based on ${
+            form.sections
+              .find((s) => s.SectionId === sectionId)
+              ?.questions.find(
+                (q) => q.questionId === dependency[0]?.questionId
+              )?.questionText
+          }`
         : "New Question",
       type: "single-select",
       isRequired: true,

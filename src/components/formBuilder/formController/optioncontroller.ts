@@ -87,6 +87,13 @@ export class OptionController {
       );
     }
 
+    // checking if the option has dependencies
+    if (option.dependencies && option.dependencies.length > 0) {
+      throw new Error(
+        `Option with ID '${optionId}' has dependencies. Please remove them before deleting the option.`
+      );
+    }
+
     // Step 2: Check if any dependencies reference this option's value in targetOptions
     const dependentItems: {
       sectionTitle: string;

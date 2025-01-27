@@ -17,7 +17,10 @@ import {
   Question,
   Option,
   Section,
+  Range,
+  DependencyCondition,
 } from "../../../../interface/interface";
+import { Add, Delete } from "@material-ui/icons";
 
 interface DependencyDialogProps {
   open: boolean;
@@ -67,6 +70,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     | "linear-scale"
   >("single-select");
   const [triggerOptionId, setTriggerOptionId] = useState<string>("");
+  const [ranges, setRanges] = useState<Range[]>([]);
 
   const resetDependencyStates = () => {
     setSelectedSectionId("");
@@ -76,6 +80,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     setTargetOptions([]);
     setNewQuestionType("single-select");
     setTriggerOptionId("");
+    setRanges([]);
   };
 
   // options for the selected question (if single-select)
@@ -89,6 +94,24 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
       : [];
   };
 
+  const addRange = () => {
+    setRanges([...ranges, { minValue: undefined, maxValue: undefined }]);
+  };
+  const deleteRange = (index: number) => {
+    const updatedRanges = [...ranges];
+    updatedRanges.splice(index, 1);
+    setRanges(updatedRanges);
+  };
+  const updateRange = (
+    index: number,
+    field: keyof Range,
+    value: number | undefined
+  ) => {
+    const updatedRanges = [...ranges];
+    updatedRanges[index][field] = value;
+    setRanges(updatedRanges);
+  };
+
   // Handle creating a new dependent question
   const handleCreateQuestionWithDependency = () => {
     if (
@@ -98,6 +121,11 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
       !newQuestionType
     )
       return;
+
+    let dependency: DependencyCondition = {
+      questionId: selectedQuestionId,
+      dependencyType,
+    };
 
     // Determine if a specific option triggers the dependency
     let actualTriggerOptionId: string | undefined = undefined;
