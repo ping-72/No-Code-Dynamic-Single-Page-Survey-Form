@@ -14,35 +14,23 @@ import {
 } from "@material-ui/core";
 import {
   Form,
-  Question,
   Option,
   Section,
   Range,
   DependencyCondition,
 } from "../../../../interface/interface";
-import { Add, Delete } from "@material-ui/icons";
+import { QuestionController } from "../../formController/questionController";
 
 interface DependencyDialogProps {
   open: boolean;
   onClose: () => void;
   form: Form;
   section: Section;
-  currentQuestionForDependency: Question | null;
-  handleCreateDependentQuestion: (
-    targetSectionId: string,
-    parentSectionId: string,
-    parentQuestionId: string,
-    expectedAnswer: string,
-    parentOptionId: string | undefined,
-    dependencyType: "visibility" | "options",
-    questionType:
-      | "single-select"
-      | "multi-select"
-      | "integer"
-      | "number"
-      | "text"
-      | "linear-scale",
-    triggerOptionId?: string
+  setForm: React.Dispatch<React.SetStateAction<Form>>;
+  setSnackbar: (
+    message: string,
+    severity: "success" | "error",
+    open: boolean
   ) => void;
 }
 
@@ -51,8 +39,8 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
   onClose,
   form,
   section,
-  currentQuestionForDependency,
-  handleCreateDependentQuestion,
+  setForm,
+  setSnackbar,
 }) => {
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
@@ -71,7 +59,6 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
   >("single-select");
   const [triggerOptionId, setTriggerOptionId] = useState<string>("");
   const [ranges, setRanges] = useState<Range[]>([]);
-
   const resetDependencyStates = () => {
     setSelectedSectionId("");
     setSelectedQuestionId("");
@@ -83,6 +70,10 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     setRanges([]);
   };
 
+  useEffect(() => {
+    if (!open) resetDependencyStates();
+    // console.log("Dependency states are: ", dependencyType);
+  }, [open]);
   // options for the selected question (if single-select)
   const getSelectedQuestionOptions = (): Option[] => {
     const selectedQuestion = form.sections
@@ -112,43 +103,51 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     setRanges(updatedRanges);
   };
 
-  // Handle creating a new dependent question
-  const handleCreateQuestionWithDependency = () => {
+  const handleCreateDependentQuestion = () => {
     if (
-      !selectedSectionId ||
       !selectedQuestionId ||
+      !selectedSectionId ||
       !expectedAnswer ||
       !newQuestionType
-    )
-      return;
-
-    let dependency: DependencyCondition = {
-      questionId: selectedQuestionId,
-      dependencyType,
-    };
-
-    // Determine if a specific option triggers the dependency
-    let actualTriggerOptionId: string | undefined = undefined;
-    if (
-      dependencyType === "options" &&
-      getSelectedQuestionOptions().length > 0
     ) {
-      actualTriggerOptionId = triggerOptionId;
+      setSnackbar("Please fill in all required fields.", "error", true);
+      return;
+    }
+    // If dependency type is 'option', ensure triggeredOptionId is selected
+    if (dependencyType === "options" && !triggerOptionId) {
+      setSnackbar(
+        "Please select a trigger option for 'options' dependency type.",
+        "error",
+        true
+      );
+      return;
     }
 
-    handleCreateDependentQuestion(
-      section.SectionId,
-      selectedSectionId,
-      selectedQuestionId,
-      expectedAnswer,
-      actualTriggerOptionId,
-      dependencyType,
-      newQuestionType,
-      actualTriggerOptionId
-    );
-
-    resetDependencyStates();
-    onClose();
+    const dependency: DependencyCondition = {
+      sectionId: selectedSectionId,
+      questionId: selectedQuestionId,
+      expectedAnswer: expectedAnswer,
+      dependencyType: dependencyType,
+      triggerOptionId:
+        dependencyType === "options" ? triggerOptionId : undefined,
+    };
+    try {
+      const updatedForm = QuestionController.addDependentQuestion(
+        form,
+        section.SectionId, // current Section
+        [dependency]
+      );
+      setForm(updatedForm);
+      setSnackbar("Dependent question added successfully.", "success", true);
+      onClose();
+      resetDependencyStates();
+    } catch (error: any) {
+      setSnackbar(
+        `Error adding dependent question: ${error.message}`,
+        "error",
+        true
+      );
+    }
   };
 
   // Styles
@@ -186,9 +185,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
       PaperProps={{ style: { padding: "16px" } }}
     >
       <DialogTitle style={dependencyDialogStyles.headerTitle}>
-        {currentQuestionForDependency
-          ? "Add Dependency"
-          : "Create Dependent Question"}
+        "Create Dependent Question"
       </DialogTitle>
       <DialogContent>
         {selectedSectionId && selectedQuestionId && (
@@ -374,7 +371,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
           Cancel
         </Button>
         <Button
-          onClick={handleCreateQuestionWithDependency}
+          onClick={handleCreateDependentQuestion}
           color="primary"
           disabled={
             !selectedQuestionId ||

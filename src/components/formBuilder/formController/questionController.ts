@@ -39,18 +39,60 @@ export class QuestionController {
   static addDependentQuestion(
     form: Form,
     sectionId: string,
-    dependency: DependencyCondition[]
+    dependencies: DependencyCondition[]
   ): Form {
+    if (!dependencies || dependencies.length === 0) {
+      throw new Error("No dependencies provided.");
+    }
+    const dependency = dependencies[0];
+
+    const targetSection = form.sections.find(
+      (sec) => sec.SectionId === sectionId
+    );
+    if (!targetSection) {
+      throw new Error(`Target section with ID ${sectionId} not found.`);
+    }
+
+    // Retrieve parent question details for the new question's text
+    const parentSection = form.sections.find(
+      (sec) => sec.SectionId === dependency.sectionId
+    );
+    if (!parentSection) {
+      throw new Error(
+        `Parent section with ID ${dependency.sectionId} not found.`
+      );
+    }
+
+    const parentQuestion = parentSection.questions.find(
+      (q) => q.questionId === dependency.questionId
+    );
+    if (!parentQuestion) {
+      throw new Error(
+        `Parent question with ID ${dependency.questionId} not found in section ${dependency.sectionId}.`
+      );
+    }
+
+    let parentOption = undefined;
+    if (dependency.triggerOptionId) {
+      parentOption = parentQuestion.options.find(
+        (op) => op.optionId === dependency.triggerOptionId
+      );
+      if (!parentOption) {
+        throw new Error(
+          `Parent option with ID ${dependency.triggerOptionId} not found in question ${dependency.questionId}.`
+        );
+      }
+    }
+
     const newQuestion: Question = {
       questionId: uuidv4(),
       sectionId,
       questionText: dependency
         ? `[Dependent] New question based on ${
             form.sections
-              .find((s) => s.SectionId === sectionId)
-              ?.questions.find(
-                (q) => q.questionId === dependency[0]?.questionId
-              )?.questionText
+              .find((s) => s.SectionId === dependency?.sectionId)
+              ?.questions.find((q) => q.questionId === dependency?.questionId)
+              ?.questionText
           }`
         : "New Question",
       type: "single-select",
@@ -60,8 +102,24 @@ export class QuestionController {
           .length || 0,
       createdAt: new Date().toISOString(),
       options: [],
-      dependentOn: dependency,
+      dependentOn: [dependency],
     };
+
+    const updatedParentQuestion: Question = {
+      ...parentQuestion,
+      dependencies: parentQuestion.dependencies
+        ? [...parentQuestion.dependencies, dependency]
+        : [dependency],
+    };
+    let updatedParentOption = parentOption;
+    if (parentOption) {
+      updatedParentOption = {
+        ...parentOption,
+        dependencies: parentOption.dependencies
+          ? [...parentOption.dependencies, dependency]
+          : [dependency],
+      };
+    }
 
     // add the dependency to the newly created dependent question
     // const section = form.sections.find((sec) => sec.SectionId === sectionId);
@@ -81,19 +139,56 @@ export class QuestionController {
 
     const updatedForm: Form = {
       ...form,
-      sections: form.sections.map((sec) =>
-        sec.SectionId === sectionId
-          ? {
-              ...sec,
-              questions: [...sec.questions, newQuestion],
-            }
-          : sec
-      ),
+      sections: form.sections.map((sec) => {
+        if (sec.SectionId === sectionId) {
+          return {
+            ...sec,
+            questions: [...sec.questions, newQuestion],
+          };
+        }
+        if (sec.SectionId === dependency.sectionId) {
+          return {
+            ...sec,
+            questions: sec.questions.map((q) => {
+              if (q.questionId === dependency.questionId) {
+                return updatedParentQuestion;
+              }
+              return q;
+            }),
+          };
+        }
+        return sec;
+      }),
       updatedAt: new Date().toISOString(),
     };
+    if (parentOption && updatedParentOption) {
+      updatedForm.sections = updatedForm.sections.map((sec) => {
+        if (sec.SectionId === dependency.sectionId) {
+          return {
+            ...sec,
+            questions: sec.questions.map((q) => {
+              if (q.questionId === dependency.questionId) {
+                return {
+                  ...q,
+                  options: q.options.map((op) => {
+                    if (op.optionId === dependency.triggerOptionId) {
+                      return updatedParentOption!;
+                    }
+                    return op;
+                  }),
+                };
+              }
+              return q;
+            }),
+          };
+        }
+        return sec;
+      });
+    }
 
     return updatedForm;
   }
+
   static deleteIndependentQuestion(
     form: Form,
     sectionId: string,

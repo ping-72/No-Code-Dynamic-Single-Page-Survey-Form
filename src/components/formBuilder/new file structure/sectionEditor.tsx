@@ -1,36 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { FormController } from "../formController/formcontroller";
 import { Delete } from "@material-ui/icons";
 import { useStyles } from "../formbuilderStyle";
-import { SectionController } from "../formController/sectionController";
-import { QuestionController } from "../formController/questionController";
-import { OptionController } from "../formController/optioncontroller";
 import { QuestionEditor } from "./sectionEditor/sectionEditor-trial/QuestionEditor/questionEditor";
 import Snackbar from "@material-ui/core";
-import { Alert } from "@material-ui/core";
-import { DependencyDialog } from "./sectionEditor/dependencyDialog";
-import {
-  DependencyCondition,
-  Form,
-  Section,
-  Question,
-  Option,
-  QuestionType,
-} from "../../../interface/interface";
-import {
-  Paper,
-  TextField,
-  Button,
-  IconButton,
-  Grid,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Radio,
-  Checkbox,
-  Typography,
-} from "@material-ui/core";
+import { Form, Section } from "../../../interface/interface";
+import { Paper, TextField, Button } from "@material-ui/core";
+import { Alert } from "@mui/material";
 
 interface SectionEditorProps {
   form: Form;

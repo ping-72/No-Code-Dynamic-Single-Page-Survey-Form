@@ -7,8 +7,6 @@ import Snackbar from "@mui/material";
 import { Alert } from "@mui/material";
 
 import { SectionController } from "../formController/sectionController";
-import { OptionController } from "../formController/optioncontroller";
-import { QuestionController } from "../formController/questionController";
 import { Form } from "../../../interface/interface";
 
 // import { FormController } from "../formController/formcontroller";
@@ -77,17 +75,29 @@ const FormBuilder: React.FC = () => {
             order: 1,
             createdAt: new Date().toISOString(),
             options: [
-              { optionId: "student", questionId: "", value: "Student" },
-              { optionId: "business", questionId: "", value: "Business" },
+              {
+                optionId: "student",
+                questionId: "",
+                type: "normal",
+                value: "Student",
+              },
+              {
+                optionId: "business",
+                questionId: "",
+                type: "normal",
+                value: "Business",
+              },
               {
                 optionId: "govt_employee",
                 questionId: "",
                 value: "Government Employee",
+                type: "normal",
               },
               {
                 optionId: "service_sector",
                 questionId: "",
                 value: "Service Sector",
+                type: "normal",
               },
             ],
           },

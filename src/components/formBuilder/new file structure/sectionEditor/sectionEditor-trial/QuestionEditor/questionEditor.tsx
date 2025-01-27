@@ -9,7 +9,6 @@ import {
   Form,
   Section,
   Question,
-  Option,
   QuestionType,
 } from "../../../../../../interface/interface";
 import Snackbar from "@material-ui/core/Snackbar";
@@ -41,7 +40,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
   form,
   setForm,
   section,
-  responses,
 }) => {
   const classes = useStyles();
   const [snackbar, setSnackbar] = React.useState<{
@@ -63,49 +61,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     | "text"
     | "linear-scale"
   >("single-select");
-
-  const handleCreateDependentQuestion = (
-    targetSectionId: string,
-    parentSectionId: string,
-    parentQuestionId: string,
-    expectedAnswer: string,
-    parentOptionId: string | undefined,
-    dependencyType: "visibility" | "options",
-    questionType: QuestionType,
-    triggerOptionId?: string
-  ) => {
-    // Construct the DependencyCondition object
-    const dependency: DependencyCondition = {
-      targetSectionId,
-      parentSectionId,
-      parentQuestionId,
-      expectedAnswer,
-      parentOptionId,
-      dependencyType,
-      triggerOptionId,
-    };
-
-    try {
-      // Add the dependent question using the controller
-      const updatedForm = QuestionController.addDependentQuestion(
-        form,
-        section.SectionId,
-        [dependency]
-      );
-      setForm(updatedForm);
-      setSnackbar({
-        open: true,
-        message: "Dependent question added successfully.",
-        severity: "success",
-      });
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: `Error adding dependent question: ${error.message}`,
-        severity: "error",
-      });
-    }
-  };
 
   const handleCreateIndependnentQuestion = (questionType: QuestionType) => {
     try {
@@ -677,8 +632,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         onClose={() => setDependencyDialogOpen(false)}
         form={form}
         section={section}
-        currentQuestionForDependency={null}
-        handleCreateDependentQuestion={handleCreateDependentQuestion}
+        setForm={setForm}
+        setSnackbar={(message, severity, open) =>
+          setSnackbar({ open, message, severity })
+        }
       />
 
       {/* Snackbar for notifications */}
