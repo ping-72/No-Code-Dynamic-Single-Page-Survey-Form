@@ -11,13 +11,18 @@ import {
   Select,
   MenuItem,
   TextField,
+  Box,
+  Icon,
+  IconButton,
 } from "@material-ui/core";
+import { Remove, Delete, Add } from "@material-ui/icons";
 import {
   Form,
   Option,
   Section,
   Range,
   DependencyCondition,
+  QuestionType,
 } from "../../../../interface/interface";
 import { QuestionController } from "../../formController/questionController";
 
@@ -74,7 +79,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     if (!open) resetDependencyStates();
     // console.log("Dependency states are: ", dependencyType);
   }, [open]);
-  // options for the selected question (if single-select)
+
   const getSelectedQuestionOptions = (): Option[] => {
     const selectedQuestion = form.sections
       .find((sec) => sec.SectionId === selectedSectionId)
@@ -101,36 +106,76 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
     const updatedRanges = [...ranges];
     updatedRanges[index][field] = value;
     setRanges(updatedRanges);
+    console.log("The ranges are now: ", ranges);
   };
 
+  const parentQuestionType: QuestionType | undefined = selectedQuestionId
+    ? form.sections
+        .find((sec) => sec.SectionId === selectedSectionId)
+        ?.questions.find((q) => q.questionId === selectedQuestionId)?.type
+    : undefined;
+  const isNumerical =
+    parentQuestionType === "integer" || parentQuestionType === "number";
+
   const handleCreateDependentQuestion = () => {
-    if (
-      !selectedQuestionId ||
-      !selectedSectionId ||
-      !expectedAnswer ||
-      !newQuestionType
-    ) {
-      setSnackbar("Please fill in all required fields.", "error", true);
-      return;
-    }
-    // If dependency type is 'option', ensure triggeredOptionId is selected
-    if (dependencyType === "options" && !triggerOptionId) {
+    if (!selectedQuestionId || !selectedSectionId) {
       setSnackbar(
-        "Please select a trigger option for 'options' dependency type.",
+        "Please select a parent section and question.",
         "error",
         true
       );
       return;
     }
+    if (isNumerical) {
+      if (ranges.length === 0) {
+        setSnackbar("Please add at least one range.", "error", true);
+        return;
+      }
+      for (let i = 0; i < ranges.length; i++) {
+        if (
+          ranges[i].minValue === undefined ||
+          ranges[i].maxValue === undefined
+        ) {
+          setSnackbar("Please fill in all range values.", "error", true);
+          return;
+        }
+        // @ts-ignore
+        if (ranges[i].minValue > ranges[i].maxValue) {
+          setSnackbar(
+            `In range ${i + 1}, Min value cannot be greater than max value.`,
+            "error",
+            true
+          );
+          return;
+        }
+      }
+    } else {
+      if (dependencyType === "options" && !expectedAnswer) {
+        setSnackbar("Please enter an expected answer.", "error", true);
+        return;
+      }
+      if (dependencyType === "options" && !triggerOptionId) {
+        setSnackbar("Please select a trigger option.", "error", true);
+        return;
+      }
+    }
 
     const dependency: DependencyCondition = {
       sectionId: selectedSectionId,
       questionId: selectedQuestionId,
-      expectedAnswer: expectedAnswer,
       dependencyType: dependencyType,
-      triggerOptionId:
-        dependencyType === "options" ? triggerOptionId : undefined,
     };
+
+    //Adding numerical or option dependency
+    if (isNumerical) {
+      dependency.range = ranges;
+    } else {
+      dependency.expectedAnswer = expectedAnswer;
+      if (dependencyType === "options") {
+        dependency.triggerOptionId = triggerOptionId;
+      }
+    }
+
     try {
       const updatedForm = QuestionController.addDependentQuestion(
         form,
@@ -253,8 +298,8 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
             <Select
               value={selectedSectionId}
               onChange={(e) => {
+                resetDependencyStates();
                 setSelectedSectionId(e.target.value as string);
-                setSelectedQuestionId("");
               }}
             >
               {form.sections
@@ -292,7 +337,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
           )}
 
           {/* Expected Answer Input */}
-          {selectedQuestionId && (
+          {selectedQuestionId && !isNumerical && (
             <>
               {form.sections
                 .find((sec) => sec.SectionId === selectedSectionId)
@@ -328,6 +373,76 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
                 />
               )}
             </>
+          )}
+
+          {/* Ranges Input for Numerical Questions */}
+          {selectedQuestionId && isNumerical && (
+            <div style={{ marginTop: "16px" }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Define Ranges
+              </Typography>
+              {ranges.map((range, index) => (
+                <Box
+                  key={index}
+                  display="flex"
+                  alignItems="center"
+                  marginBottom="8px"
+                >
+                  {/* Min Value Field */}
+                  <Box flex={1} mr={1}>
+                    <TextField
+                      label="Min Value"
+                      type="number"
+                      fullWidth
+                      value={range.minValue !== undefined ? range.minValue : ""}
+                      onChange={(e) =>
+                        updateRange(
+                          index,
+                          "minValue",
+                          e.target.value ? Number(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </Box>
+
+                  {/* Max Value Field */}
+                  <Box flex={1} mr={1}>
+                    <TextField
+                      label="Max Value"
+                      type="number"
+                      fullWidth
+                      value={range.maxValue !== undefined ? range.maxValue : ""}
+                      onChange={(e) =>
+                        updateRange(
+                          index,
+                          "maxValue",
+                          e.target.value ? Number(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </Box>
+
+                  {/* Delete Button */}
+                  <Box>
+                    <IconButton
+                      onClick={() => deleteRange(index)}
+                      color="secondary"
+                    >
+                      <Delete />
+                      {"Range"}
+                    </IconButton>
+                  </Box>
+                </Box>
+              ))}
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<Add />}
+                onClick={addRange}
+              >
+                Add Range
+              </Button>
+            </div>
           )}
         </div>
 
@@ -374,9 +489,12 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
           onClick={handleCreateDependentQuestion}
           color="primary"
           disabled={
-            !selectedQuestionId ||
-            !expectedAnswer ||
-            (dependencyType === "options" && !triggerOptionId)
+            (isNumerical && ranges.length === 0) ||
+            (!isNumerical &&
+              (!selectedSectionId ||
+                !selectedQuestionId ||
+                (dependencyType === "options" && !triggerOptionId) ||
+                (dependencyType !== "options" && !expectedAnswer)))
           }
         >
           Create Question

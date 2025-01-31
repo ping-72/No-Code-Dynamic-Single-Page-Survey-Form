@@ -10,6 +10,7 @@ import {
   Section,
   Question,
   QuestionType,
+  TableData,
 } from "../../../../../../interface/interface";
 import Snackbar from "@material-ui/core/Snackbar";
 import { Alert } from "@mui/material";
@@ -28,6 +29,7 @@ import {
   Typography,
 } from "@material-ui/core";
 import { StylesforQuestions } from "./questionstyles";
+import TableOptionComponent from "../tableHandler/TableOption";
 
 interface QuestionEditorProps {
   form: Form;
@@ -52,6 +54,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     severity: "success",
   });
   const [dependencyDialogOpen, setDependencyDialogOpen] = React.useState(false);
+  const [isTableOptionOpen, setIsTableOptionOpen] = React.useState(false);
+  const [tableOptionData, setTableOptionData] = React.useState<
+    TableData | undefined
+  >(undefined);
 
   const [newQuestionType, setNewQuestionType] = React.useState<
     | "single-select"
@@ -512,7 +518,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     <Button
                       variant="outlined"
                       color="secondary"
-                      onClick={() => handleAddOption(ques.questionId)}
+                      onClick={() => setIsTableOptionOpen(true)}
                     >
                       Add Table
                     </Button>
@@ -651,6 +657,44 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {snackbar.message}
         </Alert>
       </Snackbar>
+      {isTableOptionOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "16px",
+              borderRadius: "8px",
+              width: "min(70vw, 1000px)",
+            }}
+          >
+            <TableOptionComponent
+              initialData={tableOptionData}
+              onSave={(data) => {
+                setTableOptionData(data);
+                setIsTableOptionOpen(false);
+                // Optionally, update the current question's options to include the new table option
+              }}
+              onDelete={() => {
+                setTableOptionData(undefined);
+                setIsTableOptionOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

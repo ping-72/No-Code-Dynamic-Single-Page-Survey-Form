@@ -85,11 +85,12 @@ export interface TableOption {
 export interface Attribute {
   attributeId: string;
   attributeName: string;
-  value: string | number | FunctionDependency;
+  value: Record<string, string | number | FunctionDependency>;
 }
 export interface FunctionDependency {
   type: "function";
-  expression: string; // JavaScript expression that is to be converted to ans through mathjs
+  expression: string;
+  dependencies?: string[]; // JavaScript expression that is to be converted to ans through mathjs
 }
 
 export interface TableData {
