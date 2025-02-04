@@ -1,3 +1,5 @@
 1. The Table Option Congriguation to be made unlimited X scroll
 
 2. Form and snackbar are to be made context elements
+
+3. The Image insertion in question and options
