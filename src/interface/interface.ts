@@ -1,3 +1,14 @@
+export type OptionType = "normal" | "table";
+
+export type QuestionType =
+  | "single-select"
+  | "multi-select"
+  | "integer"
+  | "number"
+  | "text"
+  | "linear-scale"
+  | "table";
+
 export interface DependencyCondition {
   sectionId?: string;
   questionId: string;
@@ -8,15 +19,6 @@ export interface DependencyCondition {
   range?: Range[];
   targetOptions?: string[];
 }
-export type QuestionType =
-  | "single-select"
-  | "multi-select"
-  | "integer"
-  | "number"
-  | "text"
-  | "linear-scale";
-
-export type OptionType = "normal" | "table";
 
 export interface Option {
   optionId: string;

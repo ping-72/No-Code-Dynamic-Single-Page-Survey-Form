@@ -1,33 +1,52 @@
-// src/components/TableOptionComponent.tsx
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   TextField,
   Button,
   IconButton,
   Typography,
+  DialogActions,
+  DialogContent,
+  Dialog,
+  DialogTitle,
   Paper,
+  TableHead,
+  TableCell,
+  TableRow,
+  TableBody,
+  Table,
 } from "@material-ui/core";
 import { Delete, Add } from "@material-ui/icons";
 import {
   Attribute,
+  Form,
   FunctionDependency,
   TableData,
 } from "../../../../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
-import { evaluate } from "mathjs";
+import { evaluate, sec } from "mathjs";
+import { TableOptionController } from "../../../../formController/tablecontroller";
 
 interface TableOptionProps {
+  open: boolean;
+  onClose: () => void;
+  form: Form;
+  sectionId: string;
+  questionId: string;
+  optionId?: string;
   initialData?: TableData;
-  onSave: (data: TableData) => void;
-  onDelete: () => void;
+  setForm: (updatedForm: Form) => void;
 }
 
 const TableOptionComponent: React.FC<TableOptionProps> = ({
+  open,
+  onClose,
+  form,
+  sectionId,
+  questionId,
+  optionId,
+  setForm,
   initialData,
-  onSave,
-  onDelete,
 }) => {
   // Use a single useState import (duplicate removed)
   const [columns, setColumns] = useState<string[]>(
@@ -46,7 +65,24 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
     ]
   );
 
-  // Handler to add a new column
+  useEffect(() => {
+    if (!open) {
+      setColumns(initialData?.columns || ["Column 1", "Column 2"]);
+      setRows(
+        initialData?.rows || [
+          {
+            attributeId: uuidv4(),
+            attributeName: "Attribute 1",
+            value: {
+              "Column 1": "",
+              "Column 2": "",
+            },
+          },
+        ]
+      );
+    }
+  }, [open, initialData]);
+
   const addColumn = () => {
     const newColumnName = `Column ${columns.length + 1}`;
     setColumns([...columns, newColumnName]);
@@ -61,11 +97,11 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
 
   // Handler to delete a column
   const deleteColumn = (index: number) => {
-    if (columns.length <= 1) return; // Ensure at least one column exists
+    if (columns.length <= 1) return;
     const columnToDelete = columns[index];
     const updatedColumns = columns.filter((_, i) => i !== index);
     setColumns(updatedColumns);
-    // Corrected: Remove the corresponding column from each row's value object using destructuring
+    // Remove the corresponding column from each row's value object using destructuring
     setRows((prevRows) =>
       prevRows.map((row) => {
         const { [columnToDelete]: _, ...updatedValue } = row.value as Record<
@@ -93,16 +129,14 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
     setRows([...rows, newRow]);
   };
 
-  // Handler to delete a row
-  // Corrected: Use attributeId rather than row index
+  // Use attributeId rather than row index
   const deleteRow = (attributeId: string) => {
     if (rows.length <= 1) return; // Ensure at least one row exists
     const updatedRows = rows.filter((row) => row.attributeId !== attributeId);
     setRows(updatedRows);
   };
 
-  // Handler to update cell values
-  // Corrected: Accept attributeId and columnName to update the specific cell
+  // Accept attributeId and columnName to update the specific cell
   const updateCellValue = (
     attributeId: string,
     columnName: string,
@@ -120,8 +154,7 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
     );
   };
 
-  // Handler to update attribute names
-  // Corrected: Accept attributeId instead of row index
+  // Accept attributeId instead of row index
   const updateAttributeName = (attributeId: string, attributeName: string) => {
     setRows((prevRows) =>
       prevRows.map((row) =>
@@ -150,8 +183,7 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
           if (typeof cellValue === "string" && cellValue.startsWith("fn:")) {
             const expression = cellValue.slice(3).trim();
             try {
-              // Evaluate the function if needed; here we store the function dependency object.
-              // Optionally, you might want to store the evaluated result as well.
+              // Instead of directly evaluating, we store the function dependency
               return [
                 col,
                 {
@@ -159,7 +191,7 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
                   expression,
                 } as FunctionDependency,
               ];
-            } catch (error) {
+            } catch (error: any) {
               return [col, "Error"];
             }
           }
@@ -172,134 +204,136 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
       rows: preparedRows,
       columns,
     };
-    onSave(tableData);
+    let updatedForm: Form;
+    if (optionId) {
+      updatedForm = TableOptionController.updateTableOption(
+        form,
+        sectionId,
+        questionId,
+        optionId,
+        tableData
+      );
+    } else {
+      updatedForm = TableOptionController.addTableOption(
+        form,
+        sectionId,
+        questionId,
+        tableData
+      );
+    }
+    setForm(updatedForm);
+    onClose();
   };
 
   return (
-    <Paper
-      style={{
-        padding: "16px",
-        marginTop: "16px",
-        margin: "4px",
-        overflowX: "auto",
-        boxShadow: "1px 1px 1px 4px rgba(0, 0, 0, 0.1) !important",
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Table Option Configuration
-      </Typography>
-
-      {/* Delete Table Option Button */}
-      <Box display="flex" justifyContent="flex-start" mb={2}>
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<Delete />}
-          onClick={onDelete}
-        >
-          Delete Table Option
-        </Button>
-      </Box>
-
-      {/* Table Header */}
-      <Box display="flex" alignItems="center" mb={2}>
-        {columns.map((col, index) => (
-          <Box key={index} flex={1} mr={1}>
-            <TextField
-              label={`Column ${index + 1}`}
-              value={col}
-              onChange={(e) => {
-                const updatedColumns = [...columns];
-                updatedColumns[index] = e.target.value;
-                setColumns(updatedColumns);
-                // Optionally, update all rows to reflect column name changes
-              }}
-              fullWidth
-            />
-          </Box>
-        ))}
-        <IconButton onClick={addColumn} color="primary">
-          <Add />
-        </IconButton>
-        {columns.length > 1 && (
-          <IconButton
-            onClick={() => deleteColumn(columns.length - 1)}
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Table Option Configuration</DialogTitle>
+      <DialogContent dividers>
+        {/* Header for table configuration */}
+        <Box mb={2}>
+          {/* <Button
+            variant="outlined"
             color="secondary"
+            startIcon={<Delete />}
+            onClick={onDelete}
           >
-            <Delete />
-          </IconButton>
-        )}
-      </Box>
-
-      {/* Table Rows */}
-      {rows.map((row) => (
-        <Box key={row.attributeId} display="flex" alignItems="center" mb={2}>
-          {/* Attribute Name */}
-          <Box flex={1} mr={1}>
-            <TextField
-              label="Attribute Name"
-              value={row.attributeName}
-              onChange={(e) =>
-                updateAttributeName(row.attributeId, e.target.value)
-              }
-              fullWidth
-            />
-          </Box>
-
-          {/* Cell Values */}
-          {columns.map((col) => (
-            <Box key={col} flex={1} mr={1}>
-              <TextField
-                label={col}
-                value={
-                  typeof row.value === "object" ? row.value[col] || "" : ""
-                }
-                onChange={(e) =>
-                  updateCellValue(row.attributeId, col, e.target.value)
-                }
-                fullWidth
-                helperText={
-                  'For functions, prefix with "fn:". E.g., fn: previousQuestionId + 5'
-                }
-              />
-            </Box>
-          ))}
-
-          {/* Delete Row Button */}
-          {rows.length > 1 && (
-            <Box>
-              <IconButton
-                onClick={() => deleteRow(row.attributeId)}
-                color="secondary"
-              >
-                <Delete />
-              </IconButton>
-            </Box>
-          )}
+            Delete Table Option
+          </Button> */}
         </Box>
-      ))}
 
-      <br />
-      {/* Add Row Button */}
-      <Box display="flex" justifyContent="flex-start" mb={2}>
-        <Button
-          variant="outlined"
-          color="primary"
-          startIcon={<Add />}
-          onClick={addRow}
-        >
-          Add Attribute
+        {/* Table for columns and rows */}
+        <Paper variant="outlined" style={{ overflowX: "auto" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Attribute Name</TableCell>
+                {columns.map((col, index) => (
+                  <TableCell key={index}>
+                    <TextField
+                      label={`Column ${index + 1}`}
+                      value={col}
+                      onChange={(e) => {
+                        const updatedColumns = [...columns];
+                        updatedColumns[index] = e.target.value;
+                        setColumns(updatedColumns);
+                      }}
+                    />
+                    <IconButton
+                      onClick={() => deleteColumn(index)}
+                      color="secondary"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                ))}
+                <TableCell>
+                  <IconButton onClick={addColumn} color="primary">
+                    <Add />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.attributeId}>
+                  <TableCell>
+                    <TextField
+                      label="Attribute Name"
+                      value={row.attributeName}
+                      onChange={(e) =>
+                        updateAttributeName(row.attributeId, e.target.value)
+                      }
+                    />
+                    <IconButton
+                      onClick={() => deleteRow(row.attributeId)}
+                      color="secondary"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                  {columns.map((col, index) => (
+                    <TableCell key={index}>
+                      <TextField
+                        label={col}
+                        value={
+                          typeof row.value === "object"
+                            ? row.value[col] || ""
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateCellValue(row.attributeId, col, e.target.value)
+                        }
+                        helperText='For functions, prefix with "fn:"'
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+
+        {/* Button to add a new row */}
+        <Box mt={2}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<Add />}
+            onClick={addRow}
+          >
+            Add Attribute
+          </Button>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="secondary">
+          Cancel
         </Button>
-      </Box>
-      <br />
-
-      {/* Save Button */}
-      <Box display="flex" justifyContent="flex-end">
         <Button variant="contained" color="primary" onClick={handleSave}>
           Save Table Option
         </Button>
-      </Box>
-    </Paper>
+      </DialogActions>
+    </Dialog>
   );
 };
 

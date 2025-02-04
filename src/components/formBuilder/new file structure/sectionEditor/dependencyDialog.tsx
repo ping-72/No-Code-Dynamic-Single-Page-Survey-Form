@@ -389,51 +389,46 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
                   marginBottom="8px"
                 >
                   {/* Min Value Field */}
-                  <Box flex={1} mr={1}>
-                    <TextField
-                      label="Min Value"
-                      type="number"
-                      fullWidth
-                      value={range.minValue !== undefined ? range.minValue : ""}
-                      onChange={(e) =>
-                        updateRange(
-                          index,
-                          "minValue",
-                          e.target.value ? Number(e.target.value) : undefined
-                        )
-                      }
-                    />
-                  </Box>
+                  <TextField
+                    label="Min Value"
+                    type="number"
+                    style={{ marginRight: "8px" }}
+                    value={range.minValue !== undefined ? range.minValue : ""}
+                    onChange={(e) =>
+                      updateRange(
+                        index,
+                        "minValue",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                  />
 
                   {/* Max Value Field */}
-                  <Box flex={1} mr={1}>
-                    <TextField
-                      label="Max Value"
-                      type="number"
-                      fullWidth
-                      value={range.maxValue !== undefined ? range.maxValue : ""}
-                      onChange={(e) =>
-                        updateRange(
-                          index,
-                          "maxValue",
-                          e.target.value ? Number(e.target.value) : undefined
-                        )
-                      }
-                    />
-                  </Box>
+                  <TextField
+                    label="Max Value"
+                    type="number"
+                    style={{ marginRight: "8px" }}
+                    value={range.maxValue !== undefined ? range.maxValue : ""}
+                    onChange={(e) =>
+                      updateRange(
+                        index,
+                        "maxValue",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                  />
 
                   {/* Delete Button */}
-                  <Box>
-                    <IconButton
-                      onClick={() => deleteRange(index)}
-                      color="secondary"
-                    >
-                      <Delete />
-                      {"Range"}
-                    </IconButton>
-                  </Box>
+                  <IconButton
+                    onClick={() => deleteRange(index)}
+                    color="secondary"
+                    style={{ marginRight: "8px" }}
+                  >
+                    <Delete />
+                  </IconButton>
                 </Box>
               ))}
+              <br />
               <Button
                 variant="outlined"
                 color="primary"

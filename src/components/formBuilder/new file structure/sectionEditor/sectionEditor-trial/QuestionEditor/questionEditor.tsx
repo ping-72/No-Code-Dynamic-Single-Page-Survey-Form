@@ -26,10 +26,13 @@ import {
   Select,
   Radio,
   Checkbox,
+  FormControlLabel,
   Typography,
 } from "@material-ui/core";
 import { StylesforQuestions } from "./questionstyles";
 import TableOptionComponent from "../tableHandler/TableOption";
+import { TableOptionController } from "../../../../formController/tablecontroller";
+import TablePreview from "../tableHandler/tablePreview";
 
 interface QuestionEditorProps {
   form: Form;
@@ -59,14 +62,31 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     TableData | undefined
   >(undefined);
 
-  const [newQuestionType, setNewQuestionType] = React.useState<
-    | "single-select"
-    | "multi-select"
-    | "integer"
-    | "number"
-    | "text"
-    | "linear-scale"
-  >("single-select");
+  const handleToggleRequired = (questionId: string, required: boolean) => {
+    try {
+      form.sections.map((sec) => {
+        if (sec.SectionId === section.SectionId) {
+          sec.questions.map((q) => {
+            if (q.questionId === questionId) {
+              q.isRequired = required;
+            }
+          });
+        }
+      });
+      // setForm(form);
+      setSnackbar({
+        open: true,
+        message: "Question required status updated successfully.",
+        severity: "success",
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: `Error updating question required status: ${error.message}`,
+        severity: "error",
+      });
+    }
+  };
 
   const handleCreateIndependnentQuestion = (questionType: QuestionType) => {
     try {
@@ -289,15 +309,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     }
   };
 
-  const eligibleDependencies = form.sections
-    .filter((sec) => sec.SectionId <= section.SectionId)
-    .flatMap((sec) => sec.questions)
-    .flatMap((q) =>
-      q.options.filter((opt) =>
-        ["number", "single-select", "integer", "linear-scale"].includes(q.type)
-      )
-    );
-
   const getDependencyInfo = (
     dependentOn?: DependencyCondition[]
   ): {
@@ -365,6 +376,29 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     ];
   };
 
+  const handleAddTable = (questionId: string) => {
+    try {
+      const updatedForm = TableController.addTable(
+        form,
+        section.SectionId,
+        questionId,
+        "New Table"
+      );
+      setForm(updatedForm);
+      setSnackbar({
+        open: true,
+        message: "Table added successfully.",
+        severity: "success",
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: `Error adding table: ${error.message}`,
+        severity: "error",
+      });
+    }
+  };
+
   return (
     <>
       {/* Render questions */}
@@ -381,6 +415,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 : questionStyles.dependent),
             }}
           >
+            {/* Question Header: Question text input with a checkbox */}
+
             {/* Question Type Badge */}
             <div style={{ marginBottom: "16px" }}>
               <span
@@ -395,6 +431,33 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   ? "Dependent Question"
                   : "Independent Question"}
               </span>
+
+              {/* Add a header row with question text and a checkbox */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: "16px",
+                }}
+              >
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={ques.isRequired}
+                      onChange={(e) =>
+                        handleToggleRequired(ques.questionId, e.target.checked)
+                      }
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <>
+                      Required <span style={{ color: "red" }}>*</span>
+                    </>
+                  }
+                  style={{ marginLeft: "8px" }}
+                />
+              </div>
             </div>
 
             {/* Add dependency info at the top if question has dependencies */}
@@ -455,10 +518,90 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     <MenuItem value="number">Input Number</MenuItem>
                     <MenuItem value="text">Input Text</MenuItem>
                     <MenuItem value="linear-scale">Linear Scale</MenuItem>
+                    <MenuItem value="table">Table</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
             </Grid>
+
+            {/* Render options/inputs based on question type */}
+            <div>
+              {["integer", "number", "text"].includes(ques.type) && (
+                <>
+                  {ques.type === "integer" && (
+                    <TextField
+                      label="Answer"
+                      type="number"
+                      inputProps={{ step: 1 }}
+                      disabled
+                      fullWidth
+                      margin="dense"
+                    />
+                  )}
+                  {ques.type === "number" && (
+                    <TextField
+                      label="Answer"
+                      type="number"
+                      inputProps={{ step: 0.01 }}
+                      disabled
+                      fullWidth
+                      margin="dense"
+                    />
+                  )}
+                  {ques.type === "text" && (
+                    <TextField
+                      label="Answer"
+                      type="text"
+                      disabled
+                      fullWidth
+                      margin="dense"
+                      multiline
+                    />
+                  )}
+                </>
+              )}
+
+              {ques.type === "linear-scale" && (
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginTop: "16px",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
+                    {getLikertLabels(5).map(({ value, label }) => (
+                      <div
+                        key={value}
+                        style={{
+                          textAlign: "center",
+                          minWidth: "80px",
+                          flex: "1",
+                        }}
+                      >
+                        <Radio disabled />
+                        <div>{value}</div>
+                        <Typography
+                          variant="caption"
+                          style={{
+                            display: "block",
+                            minHeight: "40px",
+                            fontSize:
+                              ques.scaleRange === 10 ? "0.7rem" : "0.75rem",
+                          }}
+                        >
+                          {label}
+                        </Typography>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Render options/inputs based on question type */}
             <div>
               {["single-select", "multi-select"].includes(ques.type) && (
@@ -515,14 +658,54 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     >
                       Add Option
                     </Button>
+                  </div>
+                </>
+              )}
+              {ques.type === "table" && (
+                <>
+                  {ques.options &&
+                  ques.options.some(
+                    (option) => option.type === "table" && option.tableData
+                  ) ? (
+                    <div style={{ marginBottom: "16px" }}>
+                      <TablePreview
+                        tableData={
+                          ques.options.find(
+                            (option) =>
+                              option.type === "table" && option.tableData
+                          )!.tableData as TableData
+                        }
+                      />
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => {
+                          // Retrieve the existing tableData from the option and set it in state
+                          const tableOption = ques.options.find(
+                            (option) =>
+                              option.type === "table" && option.tableData
+                          );
+                          if (tableOption) {
+                            setTableOptionData(tableOption.tableData);
+                          }
+                          setIsTableOptionOpen(true);
+                        }}
+                      >
+                        Update Table
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
                       variant="outlined"
                       color="secondary"
-                      onClick={() => setIsTableOptionOpen(true)}
+                      onClick={() => {
+                        setTableOptionData(undefined);
+                        setIsTableOptionOpen(true);
+                      }}
                     >
                       Add Table
                     </Button>
-                  </div>
+                  )}
                 </>
               )}
 
@@ -611,6 +794,18 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 Delete Question
               </Button>
             </div>
+            {/* Table Option for Handling Tables */}
+            {isTableOptionOpen && (
+              <TableOptionComponent
+                open={isTableOptionOpen}
+                onClose={() => setIsTableOptionOpen(false)}
+                initialData={tableOptionData}
+                form={form}
+                sectionId={section.SectionId}
+                questionId={ques.questionId}
+                setForm={setForm}
+              />
+            )}
           </Paper>
         ))}
 
@@ -657,44 +852,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {snackbar.message}
         </Alert>
       </Snackbar>
-      {isTableOptionOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "16px",
-              borderRadius: "8px",
-              width: "min(70vw, 1000px)",
-            }}
-          >
-            <TableOptionComponent
-              initialData={tableOptionData}
-              onSave={(data) => {
-                setTableOptionData(data);
-                setIsTableOptionOpen(false);
-                // Optionally, update the current question's options to include the new table option
-              }}
-              onDelete={() => {
-                setTableOptionData(undefined);
-                setIsTableOptionOpen(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
     </>
   );
 };
