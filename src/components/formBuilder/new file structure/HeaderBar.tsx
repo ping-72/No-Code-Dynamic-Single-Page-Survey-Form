@@ -5,6 +5,7 @@ import { useStyles } from "../formbuilderStyle";
 interface HeaderBarProps {
   onPreview: () => void;
   onSave: () => void;
+  onViewResponse: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({ onPreview, onSave }) => {

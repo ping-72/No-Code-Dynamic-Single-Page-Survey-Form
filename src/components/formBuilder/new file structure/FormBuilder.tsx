@@ -13,18 +13,25 @@ import { SectionEditor } from "./sectionEditor";
 import FormPreview from "../../formPreview/formPreview";
 import Button from "@mui/material/Button";
 import testData from "./testData.json";
-import sampleTestData from "./sampleTestData.json";
+// import sampleTestData from "./sampleTestData.json";
+
+interface RouteParams {
+  userId: string;
+  id: string;
+}
 
 const FormBuilder: React.FC = () => {
-  const { id: formId } = useParams<{ id: string }>();
+  const { userId, id: formId } = useParams<RouteParams>();
   const classes = useStyles();
+
+  // const userId = localStorage.getItem("userId");
+  // const userId = "user123";
 
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-  const [responses, setResponses] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<Form>(testData as Form);
   // const [form, setForm] = useState<Form>(sampleTestData as Form);
@@ -56,7 +63,6 @@ const FormBuilder: React.FC = () => {
     localStorage.setItem(form.formId, JSON.stringify(form));
   }, [form]);
 
-  // Handler functions for section add/update/delete (omitted for brevity)
   const handleAddSection = () => {
     try {
       const updatedForm = SectionController.addSection(form);
@@ -117,6 +123,40 @@ const FormBuilder: React.FC = () => {
     }
   };
 
+  // saving the form to the backend Route , later to be changed to env backend url
+  const handleSave = async () => {
+    try {
+      // const response = await fetch("/api/saveForm", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(form),
+      // });
+      // if (!response.ok) {
+      //   throw new Error("Failed to save form");
+      // }
+      // const savedForm = await response.json();
+      // console.log("Saved form:", savedForm);
+      setSnackbar({
+        open: true,
+        message: "Form saved successfully.",
+        severity: "success",
+      });
+      window.location.href = `/${userId}/${formId}/sub`;
+    } catch (err: Error | any) {
+      setSnackbar({
+        open: true,
+        message: `Error saving form: ${err.message}`,
+        severity: "error",
+      });
+    }
+  };
+
+  const handleViewResponse = () => {
+    window.location.href = `/${userId}/${formId}/resp`;
+  };
+
   const handleUpdateSectionDescription = (sectionId: string, desc: string) => {
     try {
       const updatedForm = SectionController.updateSectionDescription(
@@ -142,7 +182,7 @@ const FormBuilder: React.FC = () => {
     <div className={classes.root}>
       <HeaderBar
         onPreview={() => setIsPreview(true)}
-        onSave={() => console.log("Save clicked")}
+        onSave={() => handleSave()}
       />
       <Toolbar />
       <div className={classes.contentContainer}>
@@ -162,7 +202,6 @@ const FormBuilder: React.FC = () => {
               handleUpdateSectionDescription={handleUpdateSectionDescription}
               setForm={setForm}
               section={form.sections[activeSection]}
-              responses={responses}
               handleDeleteSection={handleDeleteSection}
               handleUpdateSectionTitle={handleUpdateSectionTitle}
             />

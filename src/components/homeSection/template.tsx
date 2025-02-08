@@ -11,7 +11,8 @@ const Template: React.FC = () => {
 
   const createFormHandle = () => {
     const id = uuidv1();
-    navigate("/make_form/" + id);
+    const userId = uuidv1();
+    navigate(`/${userId}/${id}/edit`);
   };
 
   return (

@@ -38,7 +38,6 @@ interface QuestionEditorProps {
   form: Form;
   setForm: React.Dispatch<React.SetStateAction<Form>>;
   section: Section;
-  responses: Record<string, string>;
 }
 
 export const QuestionEditor: React.FC<QuestionEditorProps> = ({

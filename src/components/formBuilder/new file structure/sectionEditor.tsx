@@ -11,7 +11,6 @@ interface SectionEditorProps {
   form: Form;
   setForm: React.Dispatch<React.SetStateAction<Form>>;
   section: Section;
-  responses: Record<string, string>;
   handleDeleteSection: (sectionId: string) => void;
   handleUpdateSectionTitle: (sectionId: string, title: string) => void;
   handleUpdateSectionDescription: (sectionId: string, title: string) => void;
@@ -24,7 +23,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   handleDeleteSection,
   handleUpdateSectionTitle,
   handleUpdateSectionDescription,
-  responses,
 }) => {
   const classes = useStyles();
 
@@ -142,12 +140,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             }
             multiline
           />
-          <QuestionEditor
-            form={form}
-            setForm={setForm}
-            section={section}
-            responses={responses}
-          />
+          <QuestionEditor form={form} setForm={setForm} section={section} />
         </div>
       )}
 
