@@ -173,7 +173,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     default:
       content = null;
   }
-
   return (
     <Box
       key={question.questionId}
@@ -185,7 +184,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom align="left">
         {`${index + 1}. ${question.questionText}`}
         {question.isRequired && <span style={{ color: "red" }}> *</span>}
       </Typography>
