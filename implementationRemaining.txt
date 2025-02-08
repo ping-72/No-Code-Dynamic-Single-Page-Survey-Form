@@ -2,4 +2,32 @@
 
 2. Form and snackbar are to be made context elements
 
+3. Thr final form UI - both mobile and web view
+
 3. The Image insertion in question and options
+
+4. Two Types of Data Entry for a Table Cell:
+
+Simple Text/Number:
+The user may simply enter a text string or a number. In this case, the value is stored and later displayed directly in the final form output without any modification.
+
+Complex Function:
+Alternatively, the user can choose to enter a complex function. This function is not just a static text but a mathematical expression that involves a dynamic input coming from a previous (parent) question.
+
+Connecting to a Previous Question:
+
+The function allows the user to reference the answer of a previous question (from any earlier section). For example, if the user specifies that the current cell's value depends on section3 → question2, and that question provides a numerical value.
+In the function, a placeholder (for example, {input} or a similar marker) is used to denote the value coming from that previous question.
+Function Example and Evaluation:
+
+Suppose the function is defined as {input} * 2 + 6.
+If the user enters 20 in section3 → question2, then during the final form preview this expression is evaluated by replacing {input} with 20, calculating 20 * 2 + 6 = 46, and then displaying 46 in the table cell.
+Similarly, if the previous question’s answer is 30, the calculation becomes 30 * 2 + 6 = 66.
+Implementation Considerations:
+
+When the user is configuring the table option, the cell value may either be a simple string/number or a function (indicated by a prefix like "fn:" or another marker).
+During the final form preview, the system should check if a cell contains a function. If so, it should:
+Retrieve the current value from the referenced previous question.
+Substitute that value into the function’s expression.
+Evaluate the expression (e.g., using math.js) to produce a numeric result.
+The evaluated result is then displayed in the table instead of the raw function string.

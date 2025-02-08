@@ -2,7 +2,12 @@ import React from "react";
 import { AppBar, Toolbar, Button, Typography } from "@material-ui/core";
 import { useStyles } from "../formbuilderStyle";
 
-export const HeaderBar: React.FC = () => {
+interface HeaderBarProps {
+  onPreview: () => void;
+  onSave: () => void;
+}
+
+export const HeaderBar: React.FC<HeaderBarProps> = ({ onPreview, onSave }) => {
   const classes = useStyles();
   return (
     <AppBar position="fixed" elevation={0} className={classes.headerBar}>
@@ -11,10 +16,18 @@ export const HeaderBar: React.FC = () => {
           Form Builder
         </Typography>
         <div className={classes.headerButtons}>
-          <Button variant="contained" className={classes.previewButton}>
+          <Button
+            variant="contained"
+            className={classes.previewButton}
+            onClick={onPreview}
+          >
             Preview
           </Button>
-          <Button variant="contained" className={classes.saveButton}>
+          <Button
+            variant="contained"
+            className={classes.saveButton}
+            onClick={onSave}
+          >
             Save
           </Button>
         </div>

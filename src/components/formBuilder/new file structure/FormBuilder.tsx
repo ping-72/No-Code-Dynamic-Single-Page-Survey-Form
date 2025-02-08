@@ -2,18 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { Toolbar } from "@material-ui/core";
-// import Snackbar from "@material-ui/core";
-import Snackbar from "@mui/material";
+import { Snackbar } from "@mui/material";
 import { Alert } from "@mui/material";
-
 import { SectionController } from "../formController/sectionController";
 import { Form } from "../../../interface/interface";
-
-// import { FormController } from "../formController/formcontroller";
 import { useStyles } from "../formbuilderStyle";
 import { HeaderBar } from "./HeaderBar";
 import { Sidebar } from "./sidebar";
 import { SectionEditor } from "./sectionEditor";
+import FormPreview from "../../formPreview/formPreview";
+import Button from "@mui/material/Button";
+import testData from "./testData.json";
+import sampleTestData from "./sampleTestData.json";
 
 const FormBuilder: React.FC = () => {
   const { id: formId } = useParams<{ id: string }>();
@@ -25,92 +25,14 @@ const FormBuilder: React.FC = () => {
     severity: "success",
   });
   const [responses, setResponses] = useState<Record<string, string>>({});
-  // const handleAnswerChange = (questionId: string, answer: string) => {
-  //   setResponses((prev) => ({ ...prev, [questionId]: answer }));
-  // };
 
-  const [form, setForm] = useState<Form>({
-    formId: formId || uuidv4(),
-    formTitle: "",
-    description: "",
-    order: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    sections: [
-      {
-        SectionId: uuidv4(),
-        formId: formId || "",
-        sectionTitle: "Introduction",
-        description:
-          "Provide the title, description and optionally an image for the form.",
-        questions: [],
-        order: 0,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        SectionId: uuidv4(),
-        formId: formId || "",
-        sectionTitle: "Socio-Demographic Information",
-        description:
-          "Provide the title, description and optionally an image for the form.",
-        questions: [
-          {
-            questionId: uuidv4(),
-            sectionId: "",
-            questionText: "What is your age?",
-            type: "number",
-            isRequired: true,
-            dependencies: [],
-            order: 0,
-            createdAt: new Date().toISOString(),
-            options: [],
-          },
-          {
-            questionId: uuidv4(),
-            sectionId: "",
-            questionText: "What is your occupation?",
-            type: "single-select",
-            isRequired: true,
-            dependencies: [],
-            order: 1,
-            createdAt: new Date().toISOString(),
-            options: [
-              {
-                optionId: "student",
-                questionId: "",
-                type: "normal",
-                value: "Student",
-              },
-              {
-                optionId: "business",
-                questionId: "",
-                type: "normal",
-                value: "Business",
-              },
-              {
-                optionId: "govt_employee",
-                questionId: "",
-                value: "Government Employee",
-                type: "normal",
-              },
-              {
-                optionId: "service_sector",
-                questionId: "",
-                value: "Service Sector",
-                type: "normal",
-              },
-            ],
-          },
-        ],
-        order: 1,
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  });
-
+  const [form, setForm] = useState<Form>(testData as Form);
+  // const [form, setForm] = useState<Form>(sampleTestData as Form);
   const [activeSection, setActiveSection] = useState(0);
+  const [isPreview, setIsPreview] = useState<boolean>(false);
 
   useEffect(() => {
+    // Ensure that each question gets the correct sectionId and questionId in its options.
     setForm((prevForm) => {
       return {
         ...prevForm,
@@ -134,7 +56,7 @@ const FormBuilder: React.FC = () => {
     localStorage.setItem(form.formId, JSON.stringify(form));
   }, [form]);
 
-  // Handler functions (same as original)
+  // Handler functions for section add/update/delete (omitted for brevity)
   const handleAddSection = () => {
     try {
       const updatedForm = SectionController.addSection(form);
@@ -152,8 +74,8 @@ const FormBuilder: React.FC = () => {
       });
     }
     setActiveSection(form.sections.length);
-    // setForm((prev) => FormController.addSection(prev));
   };
+
   const handleDeleteSection = (sectionId: string) => {
     try {
       const updatedForm = SectionController.deleteSection(form, sectionId);
@@ -171,7 +93,6 @@ const FormBuilder: React.FC = () => {
       });
     }
     setActiveSection(form.sections.length);
-    // setForm((prev) => FormController.deleteSection(prev, sectionId));
   };
 
   const handleUpdateSectionTitle = (sectionId: string, title: string) => {
@@ -196,9 +117,33 @@ const FormBuilder: React.FC = () => {
     }
   };
 
+  const handleUpdateSectionDescription = (sectionId: string, desc: string) => {
+    try {
+      const updatedForm = SectionController.updateSectionDescription(
+        form,
+        sectionId,
+        desc
+      );
+      setForm(updatedForm);
+      setSnackbar({
+        open: true,
+        message: "Section description updated successfully.",
+        severity: "success",
+      });
+    } catch (err: Error | any) {
+      setSnackbar({
+        open: true,
+        message: `Error updating section description: ${err.message}`,
+        severity: "error",
+      });
+    }
+  };
   return (
     <div className={classes.root}>
-      <HeaderBar />
+      <HeaderBar
+        onPreview={() => setIsPreview(true)}
+        onSave={() => console.log("Save clicked")}
+      />
       <Toolbar />
       <div className={classes.contentContainer}>
         <Sidebar
@@ -207,10 +152,14 @@ const FormBuilder: React.FC = () => {
           setActiveSection={setActiveSection}
           handleAddSection={handleAddSection}
         />
-        <div className={classes.mainContent}>
+        <div
+          className={classes.mainContent}
+          style={{ pointerEvents: isPreview ? "none" : "auto" }}
+        >
           {form.sections.length > 0 && activeSection < form.sections.length && (
             <SectionEditor
               form={form}
+              handleUpdateSectionDescription={handleUpdateSectionDescription}
               setForm={setForm}
               section={form.sections[activeSection]}
               responses={responses}
@@ -220,19 +169,74 @@ const FormBuilder: React.FC = () => {
           )}
         </div>
       </div>
-      {/* Notification */}
-      {/* <Snackbar
+      <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
+          // severity={snackbar.severity}
         >
           {snackbar.message}
         </Alert>
-      </Snackbar> */}
+      </Snackbar>
+
+      {/* Preview Overlay */}
+      {isPreview && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              width: "90vw",
+              height: "90vh",
+              backgroundColor: "white",
+              overflowY: "auto",
+              position: "relative",
+              padding: "16px",
+              borderRadius: "4px",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                zIndex: 10000,
+              }}
+            >
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setIsPreview(false)}
+                style={{
+                  position: "fixed",
+                  top: "7vh",
+                  right: "7vw",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  zIndex: 10000,
+                }}
+              >
+                X
+              </Button>
+            </div>
+            <FormPreview formData={form} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

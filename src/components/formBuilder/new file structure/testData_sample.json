@@ -1,0 +1,76 @@
+{
+  "formId": "{{formId || uuidv4()}}",
+  "formTitle": "This is a test form.....",
+  "description": "Test Description of the form.",
+  "order": 0,
+  "createdAt": "{{new Date().toISOString()}}",
+  "updatedAt": "{{new Date().toISOString()}}",
+  "sections": [
+    {
+      "SectionId": "{{uuidv4()}}",
+      "formId": "{{formId || ''}}",
+      "sectionTitle": "Introduction",
+      "description": "Provide the title, description and optionally an image for the form.",
+      "questions": [],
+      "order": 0,
+      "createdAt": "{{new Date().toISOString()}}"
+    },
+    {
+      "SectionId": "{{uuidv4()}}",
+      "formId": "{{formId || ''}}",
+      "sectionTitle": "Socio-Demographic Information",
+      "description": "Provide the title, description and optionally an image for the form.",
+      "questions": [
+        {
+          "questionId": "{{uuidv4()}}",
+          "sectionId": "{{''}}",
+          "questionText": "What is your age?",
+          "type": "number",
+          "isRequired": true,
+          "dependencies": [],
+          "order": 0,
+          "createdAt": "{{new Date().toISOString()}}",
+          "options": []
+        },
+        {
+          "questionId": "{{uuidv4()}}",
+          "sectionId": "{{''}}",
+          "questionText": "What is your occupation?",
+          "type": "single-select",
+          "isRequired": true,
+          "dependencies": [],
+          "order": 1,
+          "createdAt": "{{new Date().toISOString()}}",
+          "options": [
+            {
+              "optionId": "student",
+              "questionId": "{{''}}",
+              "type": "normal",
+              "value": "Student"
+            },
+            {
+              "optionId": "business",
+              "questionId": "{{''}}",
+              "type": "normal",
+              "value": "Business"
+            },
+            {
+              "optionId": "govt_employee",
+              "questionId": "{{''}}",
+              "type": "normal",
+              "value": "Government Employee"
+            },
+            {
+              "optionId": "service_sector",
+              "questionId": "{{''}}",
+              "type": "normal",
+              "value": "Service Sector"
+            }
+          ]
+        }
+      ],
+      "order": 1,
+      "createdAt": "{{new Date().toISOString()}}"
+    }
+  ]
+}

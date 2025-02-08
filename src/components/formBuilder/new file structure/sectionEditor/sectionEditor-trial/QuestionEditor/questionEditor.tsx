@@ -489,9 +489,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <Grid container spacing={2} className={classes.questionRow}>
               <Grid item xs={12} sm={8}>
                 <TextField
-                  label="Question Text"
-                  value={ques.questionText}
-                  onChange={(e) =>
+                  style={{ marginTop: "16px" }}
+                  // label="Question Text"
+                  defaultValue={ques.questionText}
+                  onBlur={(e) =>
                     handleUpdateQuestionTitle(ques.questionId, e.target.value)
                   }
                   fullWidth
@@ -525,82 +526,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             </Grid>
 
             {/* Render options/inputs based on question type */}
-            <div>
-              {["integer", "number", "text"].includes(ques.type) && (
-                <>
-                  {ques.type === "integer" && (
-                    <TextField
-                      label="Answer"
-                      type="number"
-                      inputProps={{ step: 1 }}
-                      disabled
-                      fullWidth
-                      margin="dense"
-                    />
-                  )}
-                  {ques.type === "number" && (
-                    <TextField
-                      label="Answer"
-                      type="number"
-                      inputProps={{ step: 0.01 }}
-                      disabled
-                      fullWidth
-                      margin="dense"
-                    />
-                  )}
-                  {ques.type === "text" && (
-                    <TextField
-                      label="Answer"
-                      type="text"
-                      disabled
-                      fullWidth
-                      margin="dense"
-                      multiline
-                    />
-                  )}
-                </>
-              )}
-
-              {ques.type === "linear-scale" && (
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: "16px",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: "8px",
-                    }}
-                  >
-                    {getLikertLabels(5).map(({ value, label }) => (
-                      <div
-                        key={value}
-                        style={{
-                          textAlign: "center",
-                          minWidth: "80px",
-                          flex: "1",
-                        }}
-                      >
-                        <Radio disabled />
-                        <div>{value}</div>
-                        <Typography
-                          variant="caption"
-                          style={{
-                            display: "block",
-                            minHeight: "40px",
-                            fontSize:
-                              ques.scaleRange === 10 ? "0.7rem" : "0.75rem",
-                          }}
-                        >
-                          {label}
-                        </Typography>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Render options/inputs based on question type */}
             <div>

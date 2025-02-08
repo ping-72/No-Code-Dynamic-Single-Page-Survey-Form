@@ -285,7 +285,7 @@ export class QuestionController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.questions.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,

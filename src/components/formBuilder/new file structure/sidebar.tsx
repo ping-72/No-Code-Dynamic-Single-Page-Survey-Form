@@ -25,8 +25,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   handleAddSection,
 }) => {
   const classes = useStyles();
+
   return (
-    <div className={classes.sidebar}>
+    <div
+      className={classes.sidebar}
+      style={{
+        /* Set a fixed or calculated height so that the container can scroll */
+        height: "calc(100vh - 100px)", // adjust this value as needed
+        overflowY: "auto", // enables a separate scrollbar for the sidebar
+      }}
+    >
       <Typography variant="subtitle1" className={classes.sidebarTitle}>
         Form Sections
       </Typography>

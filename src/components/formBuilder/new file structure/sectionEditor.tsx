@@ -14,6 +14,7 @@ interface SectionEditorProps {
   responses: Record<string, string>;
   handleDeleteSection: (sectionId: string) => void;
   handleUpdateSectionTitle: (sectionId: string, title: string) => void;
+  handleUpdateSectionDescription: (sectionId: string, title: string) => void;
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = ({
@@ -22,6 +23,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   section,
   handleDeleteSection,
   handleUpdateSectionTitle,
+  handleUpdateSectionDescription,
   responses,
 }) => {
   const classes = useStyles();
@@ -77,13 +79,18 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             fullWidth
             value={form.formTitle}
             margin="normal"
-            onChange={(e) =>
+            onChange={(e) => {
               setForm((prev) => ({
                 ...prev,
                 formTitle: e.target.value,
                 updatedAt: new Date().toISOString(),
-              }))
-            }
+              }));
+              setSnackbar({
+                open: true,
+                message: "Form title updated successfully.",
+                severity: "success",
+              });
+            }}
           />
           <TextField
             label="Form Description"
@@ -123,13 +130,25 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
           </label>
         </div>
       ) : (
-        // Non-Introduction Section UI: Use QuestionEditor
-        <QuestionEditor
-          form={form}
-          setForm={setForm}
-          section={section}
-          responses={responses}
-        />
+        // Non-Introduction Section UI
+        <div>
+          <TextField
+            label="Section Description"
+            fullWidth
+            value={section.description}
+            margin="normal"
+            onChange={(e) =>
+              handleUpdateSectionDescription(section.SectionId, e.target.value)
+            }
+            multiline
+          />
+          <QuestionEditor
+            form={form}
+            setForm={setForm}
+            section={section}
+            responses={responses}
+          />
+        </div>
       )}
 
       {/* Snackbar for notifications */}

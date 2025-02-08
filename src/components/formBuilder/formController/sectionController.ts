@@ -41,4 +41,18 @@ export class SectionController {
       updatedAt: new Date().toISOString(),
     };
   }
+
+  static updateSectionDescription(
+    form: Form,
+    sectionId: string,
+    description: string
+  ): Form {
+    return {
+      ...form,
+      sections: form.sections.map((sec) =>
+        sec.SectionId === sectionId ? { ...sec, description } : sec
+      ),
+      updatedAt: new Date().toISOString(),
+    };
+  }
 }
