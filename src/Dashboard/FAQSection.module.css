@@ -1,0 +1,97 @@
+/* FAQSection.module.css */
+
+.faqSection {
+  background-color: #ffffff;
+  padding: 60px 20px;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h10v10H0zM10 10h10v10H10z' fill='%23f0f0f0' fill-opacity='0.5'/%3E%3C/svg%3E");
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Title Styling */
+.title {
+  font-family: "Montserrat", sans-serif;
+  font-size: 36px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animateTitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* FAQ List */
+.faqList {
+  text-align: left;
+}
+
+/* Each FAQ Item */
+.faqItem {
+  border-bottom: 1px solid #ddd;
+  padding: 16px 0;
+}
+
+/* Question Button */
+.question {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: "Open Sans", sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #1a237e;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  padding-right: 30px;
+  transition: color 0.3s;
+}
+
+.question:hover {
+  color: #00bfa5;
+}
+
+/* Chevron Icon */
+.chevron {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
+}
+
+.chevronOpen {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Answer wrapper for slide-down effect */
+.answerWrapper {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+  opacity: 0;
+}
+
+.answerOpen {
+  max-height: 300px; /* Adjust if needed */
+  opacity: 1;
+}
+
+/* Answer text */
+.answer {
+  font-family: "Open Sans", sans-serif;
+  font-size: 18px;
+  color: #555555;
+  margin-top: 8px;
+  line-height: 1.5;
+}

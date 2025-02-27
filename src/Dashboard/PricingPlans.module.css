@@ -1,0 +1,121 @@
+/* PricingPlans.module.css */
+
+.pricingSection {
+  background-color: #e3f2fd; /* Light blue pastel */
+  padding: 80px 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Title styling */
+.title {
+  font-family: "Montserrat", sans-serif;
+  font-size: 42px;
+  font-weight: bold;
+  color: #1a237e;
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animateTitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Cards container */
+.cards {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Pricing Card styling */
+.card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 40px 20px;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.animateCard {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.planName {
+  font-family: "Montserrat", sans-serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: #3949ab;
+  margin-bottom: 10px;
+}
+
+.price {
+  font-family: "Montserrat", sans-serif;
+  font-size: 36px;
+  font-weight: bold;
+  color: #00bfa5;
+  margin-bottom: 20px;
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.featureItem {
+  font-family: "Open Sans", sans-serif;
+  font-size: 16px;
+  color: #555555;
+  margin-bottom: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.animateCard .featureItem {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* CTA Button styling */
+.ctaButton {
+  font-family: "Montserrat", sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 30px;
+  background-color: #00bfa5;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+
+.ctaButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 191, 165, 0.4);
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .cards {
+    gap: 20px;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
