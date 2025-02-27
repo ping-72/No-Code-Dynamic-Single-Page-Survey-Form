@@ -38,7 +38,7 @@ const CallToActionSection: React.FC = () => {
         </p>
         <button
           className={`${styles.ctaButton} ${animate ? styles.ctaAnimate : ""}`}
-          onClick={() => (window.location.href = "/signup")}
+          onClick={() => (window.location.href = "/dashboard/home")}
         >
           Get Started Now
         </button>

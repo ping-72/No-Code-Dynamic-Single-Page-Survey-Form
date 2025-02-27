@@ -74,7 +74,7 @@ const PricingPlans: React.FC = () => {
               </ul>
               <button
                 className={styles.ctaButton}
-                onClick={() => (window.location.href = "/signup")}
+                onClick={() => (window.location.href = "/dashboard/home")}
               >
                 Get Started
               </button>

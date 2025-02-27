@@ -29,7 +29,7 @@ const HeroSection: React.FC = () => {
           className={`${styles.ctaButton} ${animate ? styles.ctaAnimate : ""}`}
           onClick={() => {
             // Replace with your sign-up action or navigation
-            window.location.href = "/signup";
+            window.location.href = "/dashboard/home";
           }}
         >
           Try for Free
