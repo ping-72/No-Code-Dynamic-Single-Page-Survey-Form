@@ -31,6 +31,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       value={responses[question.questionId] || ""}
       onChange={(e) => onResponseChange(question.questionId, e.target.value)}
       style={{ margin: "8px 0", display: "flex", flexDirection: "column" }}
+      required
     >
       {question.options.map((option) => (
         <FormControlLabel
@@ -69,6 +70,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                   );
                 }
               }}
+              required
             />
           }
           label={option.value}
@@ -89,6 +91,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             onResponseChange(question.questionId, e.target.value)
           }
           style={{ justifyContent: "space-between" }}
+          required
         >
           {Array.from({ length: scaleRange }).map((_, idx) => (
             <FormControlLabel
@@ -125,6 +128,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         multiline={question.type === "text"}
         rows={question.type === "text" ? 4 : 1}
         style={{ margin: "8px 0" }}
+        required
       />
     );
   };
@@ -144,6 +148,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               onResponseChange(question.questionId, value)
             }
             selectedValue={responses[question.questionId]}
+            required
           />
         </Box>
       );

@@ -304,10 +304,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   };
 
   // Handle updating scale range for linear-scale questions
-  const handleUpdateScaleRange = (
-    questionId: string,
-    range: 5 | 10
-  ) => {
+  const handleUpdateScaleRange = (questionId: string, range: 5 | 10) => {
     try {
       const updatedForm = QuestionController.updateAnswerType(
         form,
@@ -319,7 +316,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
       // If not, you can extend the controller accordingly
       const updatedFormWithScale = {
         ...updatedForm,
-        sections: updatedForm.sections.map((sec) => {
+        sections: updatedForm.sections.map((sec: Section) => {
           if (sec.SectionId !== section.SectionId) return sec;
           return {
             ...sec,
@@ -350,20 +347,22 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
   // Compute eligible dependency questions from earlier sections
   const eligibleDependencies = form.sections
-    .filter((sec) => sec.order < section.order) // Only earlier sections
-    .flatMap((sec) => sec.questions)
-    .filter((q) => ["single-select", "integer", "number"].includes(q.type));
+    .filter((sec: Section) => sec.order < section.order) // Only earlier sections
+    .flatMap((sec: Section) => sec.questions)
+    .filter((q: Question) =>
+      ["single-select", "integer", "number"].includes(q.type)
+    );
 
   // Get dependency information for display
   const getDependencyInfo = (dependencies?: DependencyCondition[]) => {
     if (!dependencies?.length) return null;
 
     const dep = dependencies[0]; // Show first dependency for simplicity
-    const dependentSection = form.sections.find((sec) =>
-      sec.questions.some((q) => q.questionId === dep.questionId)
+    const dependentSection = form.sections.find((sec: Section) =>
+      sec.questions.some((q: Question) => q.questionId === dep.questionId)
     );
     const dependentQuestion = dependentSection?.questions.find(
-      (q) => q.questionId === dep.questionId
+      (q: Question) => q.questionId === dep.questionId
     );
 
     return {
@@ -383,18 +382,16 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             value={section.sectionTitle}
             onChange={(e) =>
               // Update section title
-              setForm((prevForm) =>
-                {
-                  const updatedForm = { ...prevForm };
-                  updatedForm.sections = updatedForm.sections.map((sec) =>
-                    sec.SectionId === section.SectionId
-                      ? { ...sec, sectionTitle: e.target.value }
-                      : sec
-                  );
-                  updatedForm.updatedAt = new Date().toISOString();
-                  return updatedForm;
-                }
-              )
+              setForm((prevForm) => {
+                const updatedForm = { ...prevForm };
+                updatedForm.sections = updatedForm.sections.map((sec) =>
+                  sec.SectionId === section.SectionId
+                    ? { ...sec, sectionTitle: e.target.value }
+                    : sec
+                );
+                updatedForm.updatedAt = new Date().toISOString();
+                return updatedForm;
+              })
             }
             fullWidth
             className={classes.sectionTitleInput}
@@ -479,10 +476,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   label="Question Text"
                   value={ques.questionText}
                   onChange={(e) =>
-                    handleUpdateQuestionTitle(
-                      ques.questionId,
-                      e.target.value
-                    )
+                    handleUpdateQuestionTitle(ques.questionId, e.target.value)
                   }
                   fullWidth
                 />
@@ -721,14 +715,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
-        onClose={() =>
-          setSnackbar((prev) => ({ ...prev, open: false }))
-        }
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
       >
         <Alert
-          onClose={() =>
-            setSnackbar((prev) => ({ ...prev, open: false }))
-          }
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           severity={snackbar.severity}
           elevation={6}
           variant="filled"
@@ -736,4 +726,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
           {snackbar.message}
         </Alert>
       </Snackbar>
-    };
+    </Paper>
+  );
+};

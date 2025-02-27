@@ -86,6 +86,7 @@ const FrontendDisplay: React.FC = () => {
     };
 
   const handleSubmit = async () => {
+    console.log("Responses submitted:", responses);
     try {
       const res = await fetch(`/api/forms/${userId}/${formId}/submit`, {
         method: "POST",
