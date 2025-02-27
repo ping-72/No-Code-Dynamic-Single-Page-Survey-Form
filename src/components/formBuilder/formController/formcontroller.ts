@@ -4,33 +4,35 @@ import {
   DependencyCondition,
   Question,
   Option,
+  QuestionType,
+  OptionType,
 } from "./../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
 
 export class FormController {
-  private static getLikertLabels(range: 5 | 10): string[] {
-    if (range === 5) {
-      return [
-        "Strongly Disagree",
-        "Disagree",
-        "Neutral",
-        "Agree",
-        "Strongly Agree",
-      ];
-    }
-    return [
-      "Strongly Disagree",
-      "Mostly Disagree",
-      "Disagree",
-      "Somewhat Disagree",
-      "Neutral",
-      "Somewhat Agree",
-      "Agree",
-      "Mostly Agree",
-      "Strongly Agree",
-      "Completely Agree",
-    ];
-  }
+  // private static getLikertLabels(range: 5 | 10): string[] {
+  //   if (range === 5) {
+  //     return [
+  //       "Strongly Disagree",
+  //       "Disagree",
+  //       "Neutral",
+  //       "Agree",
+  //       "Strongly Agree",
+  //     ];
+  //   }
+  //   return [
+  //     "Strongly Disagree",
+  //     "Mostly Disagree",
+  //     "Disagree",
+  //     "Somewhat Disagree",
+  //     "Neutral",
+  //     "Somewhat Agree",
+  //     "Agree",
+  //     "Mostly Agree",
+  //     "Strongly Agree",
+  //     "Completely Agree",
+  //   ];
+  // }
 
   // Finds a section by ID
   private static findSection(
@@ -148,7 +150,7 @@ export class FormController {
         sec.SectionId === sectionId
           ? {
               ...sec,
-              question: sec.questions.map((q) =>
+              questions: sec.questions.map((q) =>
                 q.questionId === questionId
                   ? {
                       ...q,
@@ -211,6 +213,7 @@ export class FormController {
       optionId: uuidv4(),
       questionId,
       value: "New Option",
+      type: "normal",
     };
     return {
       ...form,
@@ -320,7 +323,7 @@ export class FormController {
     form: Form,
     sectionId: string,
     questionId: string,
-    type: string
+    type: QuestionType
   ): Form {
     // First, find all questions that depend on this question
     const dependentQuestions: { sectionId: string; questionId: string }[] = [];
@@ -356,13 +359,15 @@ export class FormController {
                       dependencies: shouldClearDependencies
                         ? []
                         : q.dependencies,
-                      scaleRange: type === "linear-scale" ? 5 : undefined,
+                      scaleRange:
+                        type === "linear-scale" ? (5 as const) : undefined,
                       options:
                         type === "linear-scale"
                           ? Array.from({ length: 5 }, (_, i) => ({
                               optionId: uuidv4(),
                               questionId: q.questionId,
                               value: `${i + 1}`,
+                              type: "normal" as OptionType,
                             }))
                           : ["text", "number", "integer"].includes(type)
                           ? []
@@ -406,8 +411,8 @@ export class FormController {
     selfOptionId: string,
     dependentSectionId: string,
     dependency: DependencyCondition,
-    dependencyType: string,
-    targetOptions: string[]
+    _dependencyType: string,
+    _targetOptions: string[]
   ): Form {
     const selfSection = FormController.findSection(form, selfSectionId);
     const dependentSection = FormController.findSection(
@@ -441,7 +446,7 @@ export class FormController {
                     if (opt.optionId === selfOptionId) {
                       const existingDeps = opt.dependencies || [];
                       return {
-                        opt,
+                        ...opt,
                         dependencies: [...existingDeps, dependency],
                       };
                     }
@@ -536,7 +541,7 @@ export class FormController {
     parentSectionId: string,
     parentQuestionId: string,
     expectedAnswer: string,
-    parentOptionId: string | undefined,
+    _parentOptionId: string | undefined,
     dependencyType: "visibility" | "options",
     questionType: string,
     triggerOptionId?: string
@@ -602,7 +607,14 @@ export class FormController {
       createdAt: new Date().toISOString(),
       options:
         questionType === "single-select" || questionType === "multi-select"
-          ? [{ optionId: uuidv4(), questionId: "", value: "Option 1" }]
+          ? [
+              {
+                optionId: uuidv4(),
+                questionId: "",
+                value: "Option 1",
+                type: "normal",
+              },
+            ]
           : [],
     };
 
@@ -631,7 +643,11 @@ export class FormController {
     return dependencies.some((dep) => {
       const matchesCondition = responses[dep.questionId] === dep.expectedAnswer;
       if (dep.dependencyType === "options" && dep.targetOptions) {
-        return matchesCondition && dep.targetOptions.includes(option.value);
+        return (
+          matchesCondition &&
+          typeof option.value === "string" &&
+          dep.targetOptions.includes(option.value)
+        );
       }
       return matchesCondition;
     });

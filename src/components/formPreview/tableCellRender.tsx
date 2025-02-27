@@ -27,7 +27,7 @@ const TableCellRenderer: React.FC<TableCellRendererProps> = ({
       return <Typography color="error">Error: {error.message}</Typography>;
     }
   }
-  return <Typography>{cellValue}</Typography>;
+  return <Typography>{cellValue as string}</Typography>;
 };
 
 export default TableCellRenderer;

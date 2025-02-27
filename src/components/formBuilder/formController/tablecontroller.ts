@@ -90,7 +90,7 @@ export class TableOptionController {
                       return {
                         ...option,
                         tableData: newValue,
-                        value: newValue,
+                        // value: newValue,
                       };
                     }
                     return option;

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Delete } from "@material-ui/icons";
 import { useStyles } from "../formbuilderStyle";
 import { QuestionEditor } from "./sectionEditor/sectionEditor-trial/QuestionEditor/questionEditor";
-import Snackbar from "@material-ui/core";
+// import Snackbar from "@material-ui/core";
 import { Form, Section } from "../../../interface/interface";
 import { Paper, TextField, Button } from "@material-ui/core";
-import { Alert } from "@mui/material";
+// import { Alert } from "@mui/material";
 
 interface SectionEditorProps {
   form: Form;
@@ -26,7 +26,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 }) => {
   const classes = useStyles();
 
-  const [snackbar, setSnackbar] = useState<{
+  const [_snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error";
@@ -40,8 +40,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     console.log("Active section is ", section);
   }, []);
 
-  const [title, setTitle] = useState(section.sectionTitle);
-  const [dependencyDialogOpen, setDependencyDialogOpen] = useState(false);
+  // const [title, setTitle] = useState(section.sectionTitle);
+  // const [dependencyDialogOpen, setDependencyDialogOpen] = useState(false);
 
   return (
     <Paper elevation={3} className={classes.sectionPaper}>

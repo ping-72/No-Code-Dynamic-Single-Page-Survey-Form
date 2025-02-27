@@ -27,22 +27,27 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   index,
 }) => {
   const renderSingleSelect = () => (
-    <RadioGroup
-      value={responses[question.questionId] || ""}
-      onChange={(e) => onResponseChange(question.questionId, e.target.value)}
-      style={{ margin: "8px 0", display: "flex", flexDirection: "column" }}
-      required
-    >
-      {question.options.map((option) => (
-        <FormControlLabel
-          key={option.optionId}
-          value={option.value}
-          control={<Radio color="primary" />}
-          label={option.value}
-          style={{ margin: "4px 0" }}
-        />
-      ))}
-    </RadioGroup>
+    <>
+      <FormControl component="fieldset" style={{ margin: "8px 0" }} required>
+        <RadioGroup
+          value={responses[question.questionId] || ""}
+          onChange={(e) =>
+            onResponseChange(question.questionId, e.target.value)
+          }
+          style={{ margin: "8px 0", display: "flex", flexDirection: "column" }}
+        >
+          {question.options.map((option) => (
+            <FormControlLabel
+              key={option.optionId}
+              value={option.value}
+              control={<Radio color="primary" />}
+              label={option.value}
+              style={{ margin: "4px 0" }}
+            />
+          ))}
+        </RadioGroup>
+      </FormControl>
+    </>
   );
 
   const renderMultiSelect = () => (
@@ -91,7 +96,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             onResponseChange(question.questionId, e.target.value)
           }
           style={{ justifyContent: "space-between" }}
-          required
+          // required
         >
           {Array.from({ length: scaleRange }).map((_, idx) => (
             <FormControlLabel
@@ -140,17 +145,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       question.options[0].tableData
     ) {
       return (
-        <Box style={{ margin: "8px 0" }}>
-          <TableDisplay
-            tableData={question.options[0].tableData}
-            inputValue={responses["<parentQuestionId>"]}
-            onRadioChange={(value: any) =>
-              onResponseChange(question.questionId, value)
-            }
-            selectedValue={responses[question.questionId]}
-            required
-          />
-        </Box>
+        <FormControl required>
+          <Box style={{ margin: "8px 0" }}>
+            <TableDisplay
+              tableData={question.options[0].tableData}
+              inputValue={responses["<parentQuestionId>"]}
+              onRadioChange={(value: any) =>
+                onResponseChange(question.questionId, value)
+              }
+              selectedValue={responses[question.questionId]}
+              // required
+            />
+          </Box>
+        </FormControl>
       );
     }
     return null;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
 import { Toolbar } from "@material-ui/core";
 import { Snackbar } from "@mui/material";
 import { Alert } from "@mui/material";
@@ -15,7 +15,7 @@ import Button from "@mui/material/Button";
 import testData from "./testData.json";
 // import sampleTestData from "./sampleTestData.json";
 
-interface RouteParams {
+interface RouteParams extends Record<string, string> {
   userId: string;
   id: string;
 }
@@ -153,9 +153,9 @@ const FormBuilder: React.FC = () => {
     }
   };
 
-  const handleViewResponse = () => {
-    window.location.href = `/${userId}/${formId}/resp`;
-  };
+  // const handleViewResponse = () => {
+  //   window.location.href = `/${userId}/${formId}/resp`;
+  // };
 
   const handleUpdateSectionDescription = (sectionId: string, desc: string) => {
     try {
@@ -183,6 +183,7 @@ const FormBuilder: React.FC = () => {
       <HeaderBar
         onPreview={() => setIsPreview(true)}
         onSave={() => handleSave()}
+        onViewResponse={() => setIsPreview(true)}
       />
       <Toolbar />
       <div className={classes.contentContainer}>

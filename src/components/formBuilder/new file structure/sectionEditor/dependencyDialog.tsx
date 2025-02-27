@@ -12,10 +12,9 @@ import {
   MenuItem,
   TextField,
   Box,
-  Icon,
   IconButton,
 } from "@material-ui/core";
-import { Remove, Delete, Add } from "@material-ui/icons";
+import { Delete, Add } from "@material-ui/icons";
 import {
   Form,
   Option,
@@ -53,7 +52,7 @@ export const DependencyDialog: React.FC<DependencyDialogProps> = ({
   const [dependencyType, setDependencyType] = useState<
     "visibility" | "options"
   >("visibility");
-  const [targetOptions, setTargetOptions] = useState<string[]>([]);
+  const [_targetOptions, setTargetOptions] = useState<string[]>([]);
   const [newQuestionType, setNewQuestionType] = useState<
     | "single-select"
     | "multi-select"

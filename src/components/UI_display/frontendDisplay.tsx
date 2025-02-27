@@ -13,9 +13,12 @@ import { useParams } from "react-router-dom";
 import { Form } from "../../interface/interface";
 import testData from "../formBuilder/new file structure/testData.json";
 import SectionDisplay from "./sectionDisplay";
-import { Toolbar, useTheme, useMediaQuery, Button } from "@material-ui/core";
+import {
+  // useTheme, useMediaQuery,
+  Button,
+} from "@material-ui/core";
 
-interface RouteParams {
+interface RouteParams extends Record<string, string | undefined> {
   userId: string;
   id: string;
 }
@@ -28,20 +31,12 @@ const FrontendDisplay: React.FC = () => {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [expandedSection, setExpandedSection] = useState<string | false>(false);
 
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const isMediumScreen = useMediaQuery(theme.breakpoints.down("md"));
+  // const theme = useTheme();
+  // const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  // const isMediumScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  const previewWidth = isSmallScreen
-    ? "95vw"
-    : isMediumScreen
-    ? "90vw"
-    : "80vw";
-  const previewHeight = isSmallScreen
-    ? "95vh"
-    : isMediumScreen
-    ? "90vh"
-    : "80vh";
+  // const _previewWidth = isSmallScreen ? "95vw" : isMediumScreen? "90vw": "80vw";
+  // const _previewHeight = isSmallScreen? "95vh": isMediumScreen ? "90vh": "80vh";
   // Uncomment and use this to fetch form data from the backend.
   // const fetchForm = async (): Promise<Form | null> => {
   //   try {

@@ -1,4 +1,4 @@
-import { OptionType, TableData } from "./../../../interface/interface";
+import { OptionType } from "./../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
 import {
   Attribute,
@@ -6,6 +6,7 @@ import {
   Form,
   Option,
 } from "../../../interface/interface";
+import * as math from "mathjs";
 
 export class OptionController {
   static addOption(
@@ -283,10 +284,10 @@ export class OptionController {
   }
 
   static addTableOption(
-    form: Form,
-    sectionId: string,
-    questionId: string,
-    tableData: { rows: Attribute[]; columns: string[] }
+    _form: Form,
+    _sectionId: string,
+    _questionId: string,
+    _tableData: { rows: Attribute[]; columns: string[] }
   ) {}
 
   static updateTableAttributeValue(
@@ -340,7 +341,10 @@ export class OptionController {
                       if (attr.attributeId !== attributeID) return attr;
                       return {
                         ...attr,
-                        value: newValue,
+                        value: newValue as unknown as Record<
+                          string,
+                          string | number | FunctionDependency
+                        >,
                       };
                     }),
                   },

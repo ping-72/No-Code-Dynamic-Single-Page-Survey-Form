@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Container, Grid, fade } from "@material-ui/core";
+import { Typography, Container, Grid, fade } from "@material-ui/core";
 import { Section, Question } from "../../interface/interface";
 import QuestionDisplay from "./questionDisplay";
 import { makeStyles, createStyles, Theme } from "@material-ui/core/styles";

@@ -4,7 +4,7 @@ import {
   TextField,
   Button,
   IconButton,
-  Typography,
+  // Typography,
   DialogActions,
   DialogContent,
   Dialog,
@@ -24,7 +24,7 @@ import {
   TableData,
 } from "../../../../../../interface/interface";
 import { v4 as uuidv4 } from "uuid";
-import { evaluate, sec } from "mathjs";
+// import { evaluate, sec } from "mathjs";
 import { TableOptionController } from "../../../../formController/tablecontroller";
 
 interface TableOptionProps {
@@ -164,12 +164,12 @@ const TableOptionComponent: React.FC<TableOptionProps> = ({
   };
 
   // Handler to update column names
-  const updateColumnName = (columnIndex: number, columnName: string) => {
-    const updatedColumns = [...columns];
-    updatedColumns[columnIndex] = columnName;
-    setColumns(updatedColumns);
-    // Optionally, update all rows to reflect column name changes if needed
-  };
+  // const _updateColumnName = (columnIndex: number, columnName: string) => {
+  //   const updatedColumns = [...columns];
+  //   updatedColumns[columnIndex] = columnName;
+  //   setColumns(updatedColumns);
+  //   // Optionally, update all rows to reflect column name changes if needed
+  // };
 
   // Handler to save the table data
   const handleSave = () => {

@@ -31,7 +31,7 @@ import {
 } from "@material-ui/core";
 import { StylesforQuestions } from "./questionstyles";
 import TableOptionComponent from "../tableHandler/TableOption";
-import { TableOptionController } from "../../../../formController/tablecontroller";
+// import { TableOptionController } from "../../../../formController/tablecontroller";
 import TablePreview from "../tableHandler/tablePreview";
 
 interface QuestionEditorProps {
@@ -87,7 +87,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     }
   };
 
-  const handleCreateIndependnentQuestion = (questionType: QuestionType) => {
+  const handleCreateIndependnentQuestion = (_questionType: QuestionType) => {
     try {
       const updatedForm = QuestionController.addQuestion(
         form,
@@ -122,7 +122,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         message: "Question title updated successfully.",
         severity: "success",
       });
-    } catch (error) {
+    } catch (error: any) {
       setSnackbar({
         open: true,
         message: `Error updating question title: ${error.message}`,
@@ -148,7 +148,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         message: "Question type updated successfully.",
         severity: "success",
       });
-    } catch (error: Error) {
+    } catch (error: any) {
       setSnackbar({
         open: true,
         message: `Error updating question type: ${error.message}`,
@@ -358,14 +358,14 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     return {
       sectionName: dependentSection.sectionTitle,
       questionText: dependentQuestion.questionText,
-      expectedAnswer: dep.expectedAnswer,
+      expectedAnswer: dep.expectedAnswer ?? "",
       type: dep.dependencyType,
     };
   };
 
   const questionStyles = StylesforQuestions();
 
-  const getLikertLabels = (range: 5): { value: number; label: string }[] => {
+  const getLikertLabels = (_range: 5): { value: number; label: string }[] => {
     return [
       { value: 1, label: "Strongly Disagree" },
       { value: 2, label: "Disagree" },
@@ -375,28 +375,28 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     ];
   };
 
-  const handleAddTable = (questionId: string) => {
-    try {
-      const updatedForm = TableController.addTable(
-        form,
-        section.SectionId,
-        questionId,
-        "New Table"
-      );
-      setForm(updatedForm);
-      setSnackbar({
-        open: true,
-        message: "Table added successfully.",
-        severity: "success",
-      });
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: `Error adding table: ${error.message}`,
-        severity: "error",
-      });
-    }
-  };
+  // const _handleAddTable = (questionId: string) => {
+  //   try {
+  //     const updatedForm = TableController.addTable(
+  //       form,
+  //       section.SectionId,
+  //       questionId,
+  //       "New Table"
+  //     );
+  //     setForm(updatedForm);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Table added successfully.",
+  //       severity: "success",
+  //     });
+  //   } catch (error: any) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Error adding table: ${error.message}`,
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
   return (
     <>
@@ -460,7 +460,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             </div>
 
             {/* Add dependency info at the top if question has dependencies */}
-            {ques.dependentOn?.length > 0 && (
+            {(ques.dependentOn?.length ?? 0) > 0 && (
               <div
                 style={{
                   padding: "8px",

@@ -1,4 +1,3 @@
-import { Section } from "./../../../interface/interface";
 import {
   Form,
   DependencyCondition,
@@ -533,8 +532,8 @@ export class QuestionController {
   }
 
   static shouldDisplayQuestion(
-    form: Form,
-    sectionId: string,
+    _form: Form,
+    _sectionId: string,
     question: Question,
     responses: Record<string, any>
   ): boolean {
@@ -575,10 +574,4 @@ export class QuestionController {
     }
     return true;
   }
-
-  //
-  //
-  //
-  //
-  //
 }

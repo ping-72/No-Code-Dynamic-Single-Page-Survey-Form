@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Paper, Typography, LinearProgress, Box } from "@material-ui/core";
-import { Form, Section } from "../../interface/interface";
+import { Form } from "../../interface/interface";
 import SectionPreview from "./sectionPreview";
 
 interface FormPreviewProps {
@@ -43,7 +43,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ formData }) => {
           <Typography variant="body1">{formData.description}</Typography>
         </Box>
 
-        {formData.sections.map((section, index) => (
+        {formData.sections.map((section, _index) => (
           <Box
             key={section.SectionId}
             mb={4}

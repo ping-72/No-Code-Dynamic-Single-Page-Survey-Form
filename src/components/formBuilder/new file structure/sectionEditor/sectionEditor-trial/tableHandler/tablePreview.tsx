@@ -10,7 +10,10 @@ import {
   TableBody,
   Typography,
 } from "@material-ui/core";
-import { TableData } from "../../../../../../interface/interface";
+import {
+  FunctionDependency,
+  TableData,
+} from "../../../../../../interface/interface";
 
 interface TablePreviewProps {
   tableData: TableData;
@@ -40,7 +43,11 @@ const TablePreview: React.FC<TablePreviewProps> = ({ tableData }) => {
               <TableCell>{row.attributeName}</TableCell>
               {tableData.columns.map((col, index) => (
                 <TableCell key={index}>
-                  {row.value[col] || ""}
+                  {typeof row.value[col] === "object" &&
+                  row.value[col] !== null &&
+                  "expression" in row.value[col]
+                    ? (row.value[col] as FunctionDependency).expression
+                    : row.value[col] || ""}{" "}
                   {/* {typeof row.value === "object" ? row.value[col] || "" : ""} */}
                 </TableCell>
               ))}
