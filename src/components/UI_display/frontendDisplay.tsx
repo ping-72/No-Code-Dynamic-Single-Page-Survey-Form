@@ -8,15 +8,14 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  useTheme,
+  useMediaQuery,
+  Button,
 } from "@material-ui/core";
 import { useParams } from "react-router-dom";
 import { Form } from "../../interface/interface";
 import testData from "../formBuilder/new file structure/testData.json";
 import SectionDisplay from "./sectionDisplay";
-import {
-  // useTheme, useMediaQuery,
-  Button,
-} from "@material-ui/core";
 
 interface RouteParams extends Record<string, string | undefined> {
   userId: string;
@@ -25,18 +24,15 @@ interface RouteParams extends Record<string, string | undefined> {
 
 const FrontendDisplay: React.FC = () => {
   const { userId, id: formId } = useParams<RouteParams>();
-  console.log("userId", userId, " formId", formId);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   const [formData, setFormData] = useState<Form | null>(null);
   const [disableSubmit, setDisableSubmit] = useState(false);
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [expandedSection, setExpandedSection] = useState<string | false>(false);
 
-  // const theme = useTheme();
-  // const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  // const isMediumScreen = useMediaQuery(theme.breakpoints.down("md"));
-
-  // const _previewWidth = isSmallScreen ? "95vw" : isMediumScreen? "90vw": "80vw";
-  // const _previewHeight = isSmallScreen? "95vh": isMediumScreen ? "90vh": "80vh";
   // Uncomment and use this to fetch form data from the backend.
   // const fetchForm = async (): Promise<Form | null> => {
   //   try {
@@ -112,12 +108,12 @@ const FrontendDisplay: React.FC = () => {
     <Paper
       style={{
         backgroundColor: "#f5f7fa",
-        padding: "1rem",
-        margin: "1rem",
+        padding: isMobile ? "0.5rem" : "1rem",
+        margin: isMobile ? "0.5rem" : "1rem",
         borderRadius: "0.5rem",
         boxShadow: "0 0.5rem 1rem rgba(0, 0, 0, 0.2)",
         animation: "fadeIn 0.5s ease-in-out",
-        maxWidth: 800,
+        maxWidth: isMobile ? "100%" : isTablet ? "90%" : "80%",
         marginLeft: "auto",
         marginRight: "auto",
       }}
@@ -129,9 +125,9 @@ const FrontendDisplay: React.FC = () => {
       />
       <Box
         mx="auto"
-        p={3}
-        pt={6}
-        pb={6}
+        p={isMobile ? 1 : 3}
+        pt={isMobile ? 2 : 6}
+        pb={isMobile ? 2 : 6}
         style={{
           animation: "fadeIn 0.5s ease-in-out",
           opacity: disableSubmit ? 0.5 : 1,
@@ -139,11 +135,11 @@ const FrontendDisplay: React.FC = () => {
       >
         {/* Form Header */}
         <Box
-          mb={4}
+          mb={isMobile ? 2 : 4}
           style={{
             backgroundColor: "#fff",
             borderRadius: "0.5rem",
-            padding: "1rem",
+            padding: isMobile ? "0.75rem" : "1rem",
             boxShadow: "0 0.25rem 0.5rem rgba(0, 0, 0, 0.1)",
           }}
         >
@@ -152,13 +148,19 @@ const FrontendDisplay: React.FC = () => {
             gutterBottom
             style={{
               fontWeight: 700,
-              fontSize: "1.5rem",
+              fontSize: isMobile ? "1.25rem" : isTablet ? "1.35rem" : "1.5rem",
               textAlign: "center",
             }}
           >
             {formData.formTitle}
           </Typography>
-          <Typography variant="body1" style={{ fontSize: "1rem" }}>
+          <Typography
+            variant="body1"
+            style={{
+              fontSize: isMobile ? "0.875rem" : "1rem",
+              lineHeight: isMobile ? 1.4 : 1.5,
+            }}
+          >
             {formData.description}
           </Typography>
         </Box>
@@ -170,12 +172,12 @@ const FrontendDisplay: React.FC = () => {
             return (
               <Box
                 key={section.SectionId}
-                mb={4}
+                mb={isMobile ? 2 : 4}
                 style={{
                   backgroundColor: "#fff",
                   borderRadius: "0.5rem",
-                  padding: "1rem",
-                  marginTop: "1rem",
+                  padding: isMobile ? "0.75rem" : "1rem",
+                  marginTop: isMobile ? "0.5rem" : "1rem",
                   boxShadow: "0 0.25rem 0.5rem rgba(0, 0, 0, 0.1)",
                 }}
               >
@@ -184,11 +186,12 @@ const FrontendDisplay: React.FC = () => {
                   style={{
                     fontWeight: 700,
                     textAlign: "center",
+                    fontSize: isMobile ? "1.1rem" : "1.25rem",
                   }}
                 >
                   {section.sectionTitle}
                 </Typography>
-                <br />
+
                 <SectionDisplay
                   section={section}
                   responses={responses}
@@ -206,18 +209,22 @@ const FrontendDisplay: React.FC = () => {
                 style={{
                   borderRadius: "0.5rem",
                   boxShadow: "0 0.25rem 0.5rem rgba(0, 0, 0, 0.1)",
-                  marginBottom: "1rem",
+                  marginBottom: isMobile ? "0.5rem" : "1rem",
                 }}
               >
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
-                  style={{ padding: "1rem" }}
+                  style={{
+                    padding: isMobile ? "0.75rem" : "1rem",
+                    minHeight: isMobile ? "48px" : "56px",
+                  }}
                 >
                   <Typography
                     variant="h5"
                     style={{
                       fontWeight: 700,
                       textAlign: "center",
+                      fontSize: isMobile ? "1.1rem" : "1.25rem",
                     }}
                   >
                     {section.sectionTitle}
@@ -225,7 +232,7 @@ const FrontendDisplay: React.FC = () => {
                 </AccordionSummary>
                 <AccordionDetails
                   style={{
-                    padding: "1rem",
+                    padding: isMobile ? "0.75rem" : "1rem",
                     backgroundColor: "#fff",
                   }}
                 >
@@ -241,7 +248,7 @@ const FrontendDisplay: React.FC = () => {
         })}
 
         <br />
-        <Box mt={4}>
+        <Box mt={isMobile ? 2 : 4} display="flex" justifyContent="center">
           <Button
             variant="contained"
             color="primary"
@@ -252,9 +259,10 @@ const FrontendDisplay: React.FC = () => {
             }}
             disabled={disableSubmit}
             style={{
-              padding: "0.5rem 1rem",
+              padding: isMobile ? "0.4rem 0.8rem" : "0.5rem 1rem",
               borderRadius: "0.5rem",
-              fontSize: "1rem",
+              fontSize: isMobile ? "0.875rem" : "1rem",
+              minWidth: isMobile ? "120px" : "150px",
             }}
           >
             {disableSubmit ? "Submitting..." : "Submit"}

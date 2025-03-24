@@ -1,0 +1,144 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@200;300;400;500;600;700&display=swap");
+
+.wrapper {
+  width: 400px;
+  border-radius: 15px;
+  padding: 40px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  transition: all 0.3s ease;
+  margin: 40px auto;
+}
+
+.wrapper:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+h2 {
+  font-size: 2.2rem;
+  margin-bottom: 25px;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.inputField {
+  position: relative;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  margin: 20px 0;
+}
+
+.inputField input {
+  width: 100%;
+  height: 40px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #ffffff;
+  padding: 0 10px;
+}
+
+.inputField label {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: #ffffff;
+  font-size: 16px;
+  pointer-events: none;
+  transition: 0.3s ease;
+}
+
+/* When input is focused or valid, move the label above */
+.inputField input:focus ~ label,
+.inputField input:valid ~ label {
+  font-size: 0.9rem;
+  top: 10px;
+  transform: translateY(-150%);
+  color: #ffdde1;
+}
+
+.forget {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 25px 0 35px 0;
+  color: #ffffff;
+}
+
+.forget label {
+  display: flex;
+  align-items: center;
+}
+
+.forget label p {
+  margin-left: 8px;
+}
+
+.wrapper a {
+  color: #ffdde1;
+  text-decoration: none;
+}
+
+.wrapper a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: #271930;
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  border-radius: 25px;
+  font-size: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+button:hover {
+  color: #000000;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+}
+
+.register {
+  text-align: center;
+  margin-top: 30px;
+  color: #ffffff;
+}
+
+/* Optional: Ensure the body background is applied only in this module context */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0 10px;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  position: relative;
+}
+
+/* Background image overlay (if desired) */
+.container::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url("https://i.postimg.cc/0jv27Qvw/20008380-645221846.jpg")
+      center/cover no-repeat,
+    #000;
+  z-index: -1;
+}

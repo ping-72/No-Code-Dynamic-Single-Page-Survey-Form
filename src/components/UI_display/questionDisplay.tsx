@@ -9,14 +9,87 @@ import {
   FormControlLabel,
   FormControl,
   FormHelperText,
+  useTheme,
+  useMediaQuery,
+  Paper,
+  Fade,
+  Divider,
 } from "@material-ui/core";
 import { Question } from "../../interface/interface";
 import TableDisplay from "./tableDisplay";
+import { makeStyles, createStyles, Theme } from "@material-ui/core/styles";
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    questionContainer: {
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: theme.spacing(2),
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+      transition: "all 0.3s ease-in-out",
+      "&:hover": {
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+      },
+    },
+    questionHeader: {
+      padding: theme.spacing(2),
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    },
+    questionNumber: {
+      color: theme.palette.primary.main,
+      fontWeight: 600,
+      marginRight: theme.spacing(1),
+    },
+    questionText: {
+      fontWeight: 500,
+      color: theme.palette.text.primary,
+    },
+    questionContent: {
+      padding: theme.spacing(2),
+    },
+    requiredLabel: {
+      color: theme.palette.error.main,
+      marginLeft: theme.spacing(0.5),
+      fontSize: "0.875rem",
+    },
+    optionContainer: {
+      margin: theme.spacing(1, 0),
+      padding: theme.spacing(1),
+      borderRadius: theme.spacing(1),
+      transition: "all 0.2s ease-in-out",
+      "&:hover": {
+        backgroundColor: theme.palette.action.hover,
+      },
+    },
+    linearScaleContainer: {
+      padding: theme.spacing(2),
+      backgroundColor: theme.palette.background.default,
+      borderRadius: theme.spacing(1),
+    },
+    scaleLabel: {
+      color: theme.palette.text.secondary,
+      fontSize: "0.875rem",
+    },
+    inputField: {
+      "& .MuiOutlinedInput-root": {
+        "&:hover fieldset": {
+          borderColor: theme.palette.primary.main,
+        },
+      },
+    },
+    "@keyframes fadeIn": {
+      from: { opacity: 0, transform: "translateY(10px)" },
+      to: { opacity: 1, transform: "translateY(0)" },
+    },
+  })
+);
+
+// Define a type for form responses
+type FormResponse = string | number | boolean | string[] | null;
 
 interface QuestionDisplayProps {
   question: Question;
-  responses: Record<string, any>;
-  onResponseChange: (questionId: string, value: any) => void;
+  responses: Record<string, FormResponse>;
+  onResponseChange: (questionId: string, value: FormResponse) => void;
   index: number;
 }
 
@@ -26,77 +99,81 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onResponseChange,
   index,
 }) => {
+  const classes = useStyles();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   const renderSingleSelect = () => (
-    <>
-      <FormControl component="fieldset" style={{ margin: "8px 0" }} required>
-        <RadioGroup
-          value={responses[question.questionId] || ""}
-          onChange={(e) =>
-            onResponseChange(question.questionId, e.target.value)
-          }
-          style={{ margin: "8px 0", display: "flex", flexDirection: "column" }}
-        >
-          {question.options.map((option) => (
-            <FormControlLabel
-              key={option.optionId}
-              value={option.value}
-              control={<Radio color="primary" />}
-              label={option.value}
-              style={{ margin: "4px 0" }}
-            />
-          ))}
-        </RadioGroup>
-      </FormControl>
-    </>
+    <FormControl
+      component="fieldset"
+      required={question.isRequired}
+      style={{ width: "100%" }}
+    >
+      <RadioGroup
+        value={responses[question.questionId] || ""}
+        onChange={(e) => onResponseChange(question.questionId, e.target.value)}
+        style={{ width: "100%" }}
+      >
+        {question.options.map((option) => (
+          <FormControlLabel
+            key={option.optionId}
+            value={option.value}
+            control={<Radio color="primary" />}
+            label={option.value}
+            className={classes.optionContainer}
+          />
+        ))}
+      </RadioGroup>
+    </FormControl>
   );
 
-  const renderMultiSelect = () => (
-    <Box style={{ margin: "8px 0" }}>
-      {question.options.map((option) => (
-        <FormControlLabel
-          key={option.optionId}
-          control={
-            <Checkbox
-              color="primary"
-              checked={(responses[question.questionId] || []).includes(
-                option.value
-              )}
-              onChange={(e) => {
-                const current = responses[question.questionId] || [];
-                if (e.target.checked) {
-                  onResponseChange(question.questionId, [
-                    ...current,
-                    option.value,
-                  ]);
-                } else {
-                  onResponseChange(
-                    question.questionId,
-                    current.filter((v: string) => v !== option.value)
-                  );
-                }
-              }}
-              required
-            />
-          }
-          label={option.value}
-          style={{ margin: "4px 0" }}
-        />
-      ))}
-    </Box>
-  );
+  const renderMultiSelect = () => {
+    const currentResponses = (responses[question.questionId] as string[]) || [];
+    return (
+      <Box style={{ width: "100%" }}>
+        {question.options.map((option) => (
+          <FormControlLabel
+            key={option.optionId}
+            control={
+              <Checkbox
+                color="primary"
+                checked={currentResponses.includes(option.value)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    onResponseChange(question.questionId, [
+                      ...currentResponses,
+                      option.value,
+                    ]);
+                  } else {
+                    onResponseChange(
+                      question.questionId,
+                      currentResponses.filter((v) => v !== option.value)
+                    );
+                  }
+                }}
+                required={question.isRequired}
+              />
+            }
+            label={option.value}
+            className={classes.optionContainer}
+          />
+        ))}
+      </Box>
+    );
+  };
 
   const renderLinearScale = () => {
     const scaleRange = question.scaleRange || 5;
     return (
-      <Box style={{ margin: "8px 0" }}>
+      <Box className={classes.linearScaleContainer}>
         <RadioGroup
           row
           value={responses[question.questionId] || ""}
           onChange={(e) =>
             onResponseChange(question.questionId, e.target.value)
           }
-          style={{ justifyContent: "space-between" }}
-          // required
+          style={{ justifyContent: "space-between", width: "100%" }}
         >
           {Array.from({ length: scaleRange }).map((_, idx) => (
             <FormControlLabel
@@ -104,15 +181,16 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               value={(idx + 1).toString()}
               control={<Radio color="primary" />}
               label={(idx + 1).toString()}
+              style={{ margin: 0, flexGrow: 1, justifyContent: "center" }}
             />
           ))}
         </RadioGroup>
         {question.scaleLabels && (
-          <Box display="flex" justifyContent="space-between" mt={1}>
-            <Typography variant="caption">
+          <Box display="flex" justifyContent="space-between" mt={2}>
+            <Typography variant="caption" className={classes.scaleLabel}>
               {question.scaleLabels.start}
             </Typography>
-            <Typography variant="caption">
+            <Typography variant="caption" className={classes.scaleLabel}>
               {question.scaleLabels.end}
             </Typography>
           </Box>
@@ -132,31 +210,24 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         onChange={(e) => onResponseChange(question.questionId, e.target.value)}
         multiline={question.type === "text"}
         rows={question.type === "text" ? 4 : 1}
-        style={{ margin: "8px 0" }}
-        required
+        required={question.isRequired}
+        className={classes.inputField}
       />
     );
   };
 
   const renderTable = () => {
-    if (
-      question.options &&
-      question.options.length > 0 &&
-      question.options[0].tableData
-    ) {
+    if (question.options?.[0]?.tableData) {
       return (
-        <FormControl required>
-          <Box style={{ margin: "8px 0" }}>
-            <TableDisplay
-              tableData={question.options[0].tableData}
-              inputValue={responses["<parentQuestionId>"]}
-              onRadioChange={(value: any) =>
-                onResponseChange(question.questionId, value)
-              }
-              selectedValue={responses[question.questionId]}
-              // required
-            />
-          </Box>
+        <FormControl required={question.isRequired} style={{ width: "100%" }}>
+          <TableDisplay
+            tableData={question.options[0].tableData}
+            inputValue={responses["<parentQuestionId>"]?.toString() || ""}
+            onRadioChange={(value: FormResponse) =>
+              onResponseChange(question.questionId, value)
+            }
+            selectedValue={responses[question.questionId]?.toString() || ""}
+          />
         </FormControl>
       );
     }
@@ -185,32 +256,27 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     default:
       content = null;
   }
+
   return (
-    <Box
-      key={question.questionId}
-      mt={4}
-      style={{
-        padding: "16px",
-        backgroundColor: "#f9f9f9",
-        borderRadius: "8px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-      }}
-    >
-      <Typography variant="h6" gutterBottom align="left">
-        {`${index + 1}. ${question.questionText}`}
-        {question.isRequired && <span style={{ color: "red" }}> *</span>}
-      </Typography>
-      {content}
-      {question.dependentOn &&
-        question.dependentOn.map((dep, idx) => (
-          <FormHelperText
-            key={idx}
-            style={{ color: "#1976d2", marginTop: 8, textAlign: "right" }}
+    <Fade in timeout={500} style={{ transitionDelay: `${index * 100}ms` }}>
+      <Paper className={classes.questionContainer}>
+        <div className={classes.questionHeader}>
+          <Typography
+            variant="h6"
+            style={{ display: "flex", alignItems: "center" }}
           >
-            {`Shows when: ${dep.questionText} = ${dep.expectedAnswer}`}
-          </FormHelperText>
-        ))}
-    </Box>
+            <span className={classes.questionNumber}>Q{index + 1}</span>
+            <span className={classes.questionText}>
+              {question.questionText}
+            </span>
+            {question.isRequired && (
+              <span className={classes.requiredLabel}>*</span>
+            )}
+          </Typography>
+        </div>
+        <div className={classes.questionContent}>{content}</div>
+      </Paper>
+    </Fade>
   );
 };
 

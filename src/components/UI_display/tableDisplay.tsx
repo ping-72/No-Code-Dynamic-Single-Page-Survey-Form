@@ -9,6 +9,9 @@ import {
   TableBody,
   Typography,
   Radio,
+  useTheme,
+  useMediaQuery,
+  Box,
 } from "@material-ui/core";
 import { TableData } from "../../interface/interface";
 import TableCellRenderer from "./tableCellRenderer";
@@ -16,7 +19,7 @@ import TableCellRenderer from "./tableCellRenderer";
 interface TableDisplayProps {
   tableData: TableData;
   inputValue?: number;
-  onRadioChange: (value: any) => void;
+  onRadioChange: (value: string) => void;
   selectedValue: string;
 }
 
@@ -26,60 +29,171 @@ const TableDisplay: React.FC<TableDisplayProps> = ({
   onRadioChange,
   selectedValue,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
-    <Paper
-      variant="outlined"
-      style={{ padding: "8px", marginBottom: "8px", overflowX: "auto" }}
+    <Box
+      style={{
+        width: "100%",
+        overflowX: "auto",
+        backgroundColor: "#fff",
+        borderRadius: "8px",
+      }}
     >
-      <Typography variant="subtitle1" gutterBottom>
-        Table Preview:
-      </Typography>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell></TableCell>
-            {tableData.columns.map((col, idx) => (
-              <TableCell key={idx} align="center">
-                {col}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tableData.rows.map((row) => (
-            <TableRow key={row.attributeId}>
-              <TableCell>{row.attributeName}</TableCell>
+      <Paper
+        variant="outlined"
+        style={{
+          padding: isMobile ? "4px" : isTablet ? "6px" : "8px",
+          marginBottom: isMobile ? "4px" : "8px",
+          boxShadow: "none",
+          border: "1px solid rgba(0, 0, 0, 0.12)",
+        }}
+      >
+        <Typography
+          variant={isMobile ? "body1" : "subtitle1"}
+          gutterBottom
+          style={{
+            fontSize: isMobile ? "0.875rem" : isTablet ? "1rem" : "1.1rem",
+            fontWeight: 500,
+            padding: isMobile ? "4px 8px" : "8px 16px",
+          }}
+        >
+          Table Preview:
+        </Typography>
+        <Table
+          size={isMobile ? "small" : "medium"}
+          style={{
+            minWidth: isMobile ? 300 : isTablet ? 400 : 500,
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell
+                style={{
+                  padding: isMobile ? "8px 4px" : "12px 8px",
+                  fontSize: isMobile
+                    ? "0.75rem"
+                    : isTablet
+                    ? "0.875rem"
+                    : "1rem",
+                  fontWeight: 600,
+                }}
+              />
               {tableData.columns.map((col, idx) => (
-                <TableCell key={idx} align="center">
-                  <TableCellRenderer
-                    cellValue={row.value[col]}
-                    inputValue={inputValue}
+                <TableCell
+                  key={idx}
+                  align="center"
+                  style={{
+                    padding: isMobile ? "8px 4px" : "12px 8px",
+                    fontSize: isMobile
+                      ? "0.75rem"
+                      : isTablet
+                      ? "0.875rem"
+                      : "1rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {col}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {tableData.rows.map((row) => (
+              <TableRow
+                key={row.attributeId}
+                style={{
+                  "&:nth-of-type(odd)": {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <TableCell
+                  style={{
+                    padding: isMobile ? "8px 4px" : "12px 8px",
+                    fontSize: isMobile
+                      ? "0.75rem"
+                      : isTablet
+                      ? "0.875rem"
+                      : "1rem",
+                  }}
+                >
+                  {row.attributeName}
+                </TableCell>
+                {tableData.columns.map((col, idx) => (
+                  <TableCell
+                    key={idx}
+                    align="center"
+                    style={{
+                      padding: isMobile ? "8px 4px" : "12px 8px",
+                      fontSize: isMobile
+                        ? "0.75rem"
+                        : isTablet
+                        ? "0.875rem"
+                        : "1rem",
+                    }}
+                  >
+                    <TableCellRenderer
+                      cellValue={row.value[col]}
+                      inputValue={inputValue}
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+            {/* Radio buttons row */}
+            <TableRow>
+              <TableCell
+                style={{
+                  padding: isMobile ? "8px 4px" : "12px 8px",
+                  fontSize: isMobile
+                    ? "0.75rem"
+                    : isTablet
+                    ? "0.875rem"
+                    : "1rem",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  style={{
+                    fontSize: isMobile
+                      ? "0.75rem"
+                      : isTablet
+                      ? "0.875rem"
+                      : "1rem",
+                  }}
+                >
+                  Select:
+                </Typography>
+              </TableCell>
+              {tableData.columns.map((col, idx) => (
+                <TableCell
+                  key={idx}
+                  align="center"
+                  style={{
+                    padding: isMobile ? "8px 4px" : "12px 8px",
+                  }}
+                >
+                  <Radio
+                    color="primary"
+                    value={col}
+                    checked={selectedValue === col}
+                    onChange={(e) => onRadioChange(e.target.value)}
+                    size={isMobile ? "small" : "medium"}
+                    style={{
+                      padding: isMobile ? 4 : 8,
+                    }}
                   />
                 </TableCell>
               ))}
             </TableRow>
-          ))}
-          {/* Additional row for radio buttons */}
-          <TableRow>
-            <TableCell>
-              <Typography variant="body2" color="textSecondary">
-                Select:
-              </Typography>
-            </TableCell>
-            {tableData.columns.map((col, idx) => (
-              <TableCell key={idx} align="center">
-                <Radio
-                  color="primary"
-                  value={col}
-                  checked={selectedValue === col}
-                  onChange={(e) => onRadioChange(e.target.value)}
-                />
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableBody>
-      </Table>
-    </Paper>
+          </TableBody>
+        </Table>
+      </Paper>
+    </Box>
   );
 };
 

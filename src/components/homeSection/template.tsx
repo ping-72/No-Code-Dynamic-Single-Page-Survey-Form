@@ -5,6 +5,7 @@ import { Add } from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { IconButton } from "@material-ui/core";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
+import DashboardHeader from "./DashboardHeader";
 
 const Template: React.FC = () => {
   const navigate = useNavigate();
@@ -16,30 +17,39 @@ const Template: React.FC = () => {
   };
 
   return (
-    <div className="template">
-      <div className="template-head">
-        <div className="template-left">
-          <span>Start a new form</span>
-        </div>
-        <div className="template-right">
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
-        </div>
-      </div>
-
-      <div className="template-main">
-        <div className="template-blank-form" onClick={createFormHandle}>
-          <Add></Add>{" "}
-        </div>
+    <>
+      <DashboardHeader />
+      <div className="template">
         <br />
-        <hr />
-        <hr />
-        <hr />
-        <hr />
-        <span className={`${""} span`}>Previous Forms</span>
+        <div className="template-head">
+          <div className="template-left">
+            <span>Start a new form</span>
+          </div>
+          <div className="template-right">
+            <IconButton>
+              <MoreVertIcon />
+            </IconButton>
+          </div>
+        </div>
+
+        <div className="template-main">
+          <div className="template-blank-form" onClick={createFormHandle}>
+            <Add></Add>{" "}
+          </div>
+          <br />
+          <hr />
+          <hr />
+          <hr />
+          <hr />
+          <span className={`${""} span`}>Previous Forms</span>
+          <br />
+          <br />
+          Its absolutely empty
+          <br />
+          <br />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

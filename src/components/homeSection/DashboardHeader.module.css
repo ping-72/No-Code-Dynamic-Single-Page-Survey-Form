@@ -1,0 +1,42 @@
+.header {
+  position: sticky; /* Stays on top when scrolling */
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: background 0.3s ease;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  margin-right: 10px;
+  width: 40px;
+  height: 40px;
+}
+
+.userName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+}
+
+.logoutButton {
+  color: #e53935;
+}
+
+.logoutButton:hover {
+  text-decoration: underline;
+}

@@ -4,22 +4,51 @@ import Home from "./components/homeSection/home";
 // import FormBuilder from "./components/formBuilder/formBuilder";
 import FormBuilder from "./components/formBuilder/new file structure/FormBuilder";
 import FrontendDisplay from "./components/UI_display/frontendDisplay";
-// import HeroSection from "./Dashboard/HeroSection";
 import Dashboard from "./Dashboard/main/Dashboard";
+import SignIn from "./authentication/pages/SignIn";
+import SignUp from "./authentication/pages/SignUp";
+import PrivateRoute from "./authentication/PrivateRoutes";
 
 const App: React.FC = () => {
   return (
     <div className="App">
       <Routes>
-        {/* This is for home page */}
-        <Route path="/dashboard/home" element={<Home />} />
-        {/* This is for building the form */}
-        <Route path="/:userId/:id/edit" element={<FormBuilder />} />
+        {/* Open Routes */}
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
         {/* This is for collecting the response of the form */}
         <Route path="/:userId/:id/sub" element={<FrontendDisplay />} />
+
+        {/* Private Routes */}
+
+        {/* This is for home page */}
+        <Route
+          path="/dashboard/home"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
+        {/* This is for building the form */}
+        <Route
+          path="/:userId/:id/edit"
+          element={
+            <PrivateRoute>
+              <FormBuilder />
+            </PrivateRoute>
+          }
+        />
         {/* This is for showing the responses of the form */}
-        <Route path="/:userId/:id/resp" element={<h1>Responses shown</h1>} />
-        {/* This is for dashboard, to be implemented later */}
+        <Route
+          path="/:userId/:id/resp"
+          element={
+            <PrivateRoute>
+              <h1>Responses shown</h1>
+            </PrivateRoute>
+          }
+        />
+        {/* Default Route*/}
         <Route path="/" element={<Dashboard />} />
       </Routes>
     </div>
