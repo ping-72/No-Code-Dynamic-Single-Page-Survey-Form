@@ -6,9 +6,16 @@ interface HeaderBarProps {
   onPreview: () => void;
   onSave: () => void;
   onViewResponse: () => void;
+  isSaving?: boolean;
+  isExistingForm?: boolean;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = ({ onPreview, onSave }) => {
+export const HeaderBar: React.FC<HeaderBarProps> = ({
+  onPreview,
+  onSave,
+  isSaving = false,
+  isExistingForm = false,
+}) => {
   const classes = useStyles();
   return (
     <AppBar position="fixed" elevation={0} className={classes.headerBar}>
@@ -28,8 +35,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ onPreview, onSave }) => {
             variant="contained"
             className={classes.saveButton}
             onClick={onSave}
+            disabled={isSaving}
           >
-            Save
+            {isSaving ? "Saving..." : isExistingForm ? "Update" : "Save"}
           </Button>
         </div>
       </Toolbar>

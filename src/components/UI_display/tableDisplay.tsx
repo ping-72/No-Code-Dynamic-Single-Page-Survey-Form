@@ -1,199 +1,176 @@
 // TableDisplay.tsx
 import React from "react";
 import {
-  Paper,
   Table,
-  TableHead,
-  TableCell,
-  TableRow,
   TableBody,
-  Typography,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
   Radio,
-  useTheme,
-  useMediaQuery,
+  Typography,
+  FormControl,
+  FormHelperText,
   Box,
 } from "@material-ui/core";
-import { TableData } from "../../interface/interface";
+import { makeStyles } from "@material-ui/core/styles";
 import TableCellRenderer from "./tableCellRenderer";
+
+export interface Attribute {
+  name: string;
+  value: string | number | boolean | null;
+}
+
+// Define the structure for table data
+export interface TableData {
+  headers: string[];
+  rows: Attribute[];
+  selectedColumn?: number;
+}
+
+const useStyles = makeStyles((theme) => ({
+  tableContainer: {
+    marginTop: theme.spacing(2),
+    borderRadius: 12,
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+    overflow: "hidden",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
+    },
+  },
+  table: {
+    tableLayout: "fixed",
+  },
+  headerCell: {
+    backgroundColor: theme.palette.primary.light,
+    color: theme.palette.primary.contrastText,
+    fontWeight: 600,
+    padding: theme.spacing(1.5),
+    fontSize: "0.9rem",
+    textAlign: "center",
+    borderRight: `1px solid rgba(224, 224, 224, 0.4)`,
+    "&:last-child": {
+      borderRight: "none",
+    },
+  },
+  attributeCell: {
+    backgroundColor: theme.palette.grey[50],
+    fontWeight: 500,
+    padding: theme.spacing(1.5),
+    minWidth: 150,
+  },
+  dataCell: {
+    position: "relative",
+    padding: theme.spacing(1.5),
+    textAlign: "center",
+  },
+  selectRow: {
+    backgroundColor: theme.palette.background.default,
+  },
+  selectCell: {
+    textAlign: "center",
+    padding: theme.spacing(1),
+  },
+  radioCell: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorMessage: {
+    marginTop: theme.spacing(1),
+    textAlign: "center",
+  },
+  alternateRow: {
+    backgroundColor: theme.palette.grey[50],
+  },
+}));
 
 interface TableDisplayProps {
   tableData: TableData;
-  inputValue?: number;
-  onRadioChange: (value: string) => void;
   selectedValue: string;
+  onRadioChange: (value: string) => void;
+  error?: boolean;
+  errorMessage?: string | null;
 }
 
 const TableDisplay: React.FC<TableDisplayProps> = ({
   tableData,
-  inputValue,
-  onRadioChange,
   selectedValue,
+  onRadioChange,
+  error = false,
+  errorMessage = null,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const classes = useStyles();
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onRadioChange(event.target.value);
+  };
 
   return (
-    <Box
-      style={{
-        width: "100%",
-        overflowX: "auto",
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-      }}
-    >
-      <Paper
-        variant="outlined"
-        style={{
-          padding: isMobile ? "4px" : isTablet ? "6px" : "8px",
-          marginBottom: isMobile ? "4px" : "8px",
-          boxShadow: "none",
-          border: "1px solid rgba(0, 0, 0, 0.12)",
-        }}
-      >
-        <Typography
-          variant={isMobile ? "body1" : "subtitle1"}
-          gutterBottom
-          style={{
-            fontSize: isMobile ? "0.875rem" : isTablet ? "1rem" : "1.1rem",
-            fontWeight: 500,
-            padding: isMobile ? "4px 8px" : "8px 16px",
-          }}
-        >
-          Table Preview:
-        </Typography>
-        <Table
-          size={isMobile ? "small" : "medium"}
-          style={{
-            minWidth: isMobile ? 300 : isTablet ? 400 : 500,
-          }}
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                style={{
-                  padding: isMobile ? "8px 4px" : "12px 8px",
-                  fontSize: isMobile
-                    ? "0.75rem"
-                    : isTablet
-                    ? "0.875rem"
-                    : "1rem",
-                  fontWeight: 600,
-                }}
-              />
-              {tableData.columns.map((col, idx) => (
-                <TableCell
-                  key={idx}
-                  align="center"
-                  style={{
-                    padding: isMobile ? "8px 4px" : "12px 8px",
-                    fontSize: isMobile
-                      ? "0.75rem"
-                      : isTablet
-                      ? "0.875rem"
-                      : "1rem",
-                    fontWeight: 600,
-                  }}
+    <FormControl error={error} fullWidth component="fieldset">
+      <Box mt={1}>
+        <TableContainer component={Paper} className={classes.tableContainer}>
+          <Table className={classes.table} aria-label="comparison table">
+            <TableHead>
+              <TableRow>
+                <TableCell className={classes.headerCell}></TableCell>
+                {tableData.headers.map((column, index) => (
+                  <TableCell key={index} className={classes.headerCell}>
+                    {column}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {/* Attribute rows */}
+              {tableData.rows.map((row, rowIndex) => (
+                <TableRow
+                  key={row.name || rowIndex}
+                  className={
+                    rowIndex % 2 === 1 ? classes.alternateRow : undefined
+                  }
                 >
-                  {col}
-                </TableCell>
+                  <TableCell className={classes.attributeCell}>
+                    {row.name}
+                  </TableCell>
+                  {tableData.headers.map((column, colIndex) => (
+                    <TableCell
+                      key={`${row.name}-${colIndex}`}
+                      className={classes.dataCell}
+                    >
+                      <TableCellRenderer cellValue={row.value} />
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {tableData.rows.map((row) => (
-              <TableRow
-                key={row.attributeId}
-                style={{
-                  "&:nth-of-type(odd)": {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
-                <TableCell
-                  style={{
-                    padding: isMobile ? "8px 4px" : "12px 8px",
-                    fontSize: isMobile
-                      ? "0.75rem"
-                      : isTablet
-                      ? "0.875rem"
-                      : "1rem",
-                  }}
-                >
-                  {row.attributeName}
+
+              {/* Selection row with radio buttons */}
+              <TableRow className={classes.selectRow}>
+                <TableCell className={classes.attributeCell}>
+                  <Typography variant="body2" color="textSecondary">
+                    Select option:
+                  </Typography>
                 </TableCell>
-                {tableData.columns.map((col, idx) => (
-                  <TableCell
-                    key={idx}
-                    align="center"
-                    style={{
-                      padding: isMobile ? "8px 4px" : "12px 8px",
-                      fontSize: isMobile
-                        ? "0.75rem"
-                        : isTablet
-                        ? "0.875rem"
-                        : "1rem",
-                    }}
-                  >
-                    <TableCellRenderer
-                      cellValue={row.value[col]}
-                      inputValue={inputValue}
+                {tableData.headers.map((column, index) => (
+                  <TableCell key={index} className={classes.selectCell}>
+                    <Radio
+                      checked={selectedValue === column}
+                      onChange={handleChange}
+                      value={column}
+                      name="column-selection"
+                      color="primary"
                     />
                   </TableCell>
                 ))}
               </TableRow>
-            ))}
-            {/* Radio buttons row */}
-            <TableRow>
-              <TableCell
-                style={{
-                  padding: isMobile ? "8px 4px" : "12px 8px",
-                  fontSize: isMobile
-                    ? "0.75rem"
-                    : isTablet
-                    ? "0.875rem"
-                    : "1rem",
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  style={{
-                    fontSize: isMobile
-                      ? "0.75rem"
-                      : isTablet
-                      ? "0.875rem"
-                      : "1rem",
-                  }}
-                >
-                  Select:
-                </Typography>
-              </TableCell>
-              {tableData.columns.map((col, idx) => (
-                <TableCell
-                  key={idx}
-                  align="center"
-                  style={{
-                    padding: isMobile ? "8px 4px" : "12px 8px",
-                  }}
-                >
-                  <Radio
-                    color="primary"
-                    value={col}
-                    checked={selectedValue === col}
-                    onChange={(e) => onRadioChange(e.target.value)}
-                    size={isMobile ? "small" : "medium"}
-                    style={{
-                      padding: isMobile ? 4 : 8,
-                    }}
-                  />
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Paper>
-    </Box>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+      {errorMessage && <FormHelperText error>{errorMessage}</FormHelperText>}
+    </FormControl>
   );
 };
 

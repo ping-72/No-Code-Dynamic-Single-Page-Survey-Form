@@ -1,6 +1,8 @@
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import Home from "./components/homeSection/home";
+import ManageResponses from "./manage_responses/ManageResponses";
+
 // import FormBuilder from "./components/formBuilder/formBuilder";
 import FormBuilder from "./components/formBuilder/new file structure/FormBuilder";
 import FrontendDisplay from "./components/UI_display/frontendDisplay";
@@ -23,7 +25,7 @@ const App: React.FC = () => {
 
         {/* This is for home page */}
         <Route
-          path="/dashboard/home"
+          path="/:userId/dashboard/home"
           element={
             <PrivateRoute>
               <Home />
@@ -41,10 +43,10 @@ const App: React.FC = () => {
         />
         {/* This is for showing the responses of the form */}
         <Route
-          path="/:userId/:id/resp"
+          path="/:userId/:formId/responses"
           element={
             <PrivateRoute>
-              <h1>Responses shown</h1>
+              <ManageResponses />
             </PrivateRoute>
           }
         />

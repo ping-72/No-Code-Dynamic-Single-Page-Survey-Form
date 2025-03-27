@@ -10,49 +10,98 @@ interface AuthContextType {
   loading: boolean;
 }
 
+interface JwtPayload {
+  userId: string;
+  username?: string;
+  email?: string;
+  exp?: number;
+  iat?: number;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<UserData | null>(null);
-  const [loading, _setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // const token = localStorage.getItem("jwtToken");
-    const dummyUserData: UserData = {
-      userId: "1234567890",
-      name: "John Doe",
-      email: "john.doe@example.com",
-    };
-    const token =
-      localStorage.getItem("jwtToken") || JSON.stringify(dummyUserData);
-    if (token) {
-      try {
-        const decodedToken: UserData = jwtDecode(token);
-        
-        if (decodedToken.exp && decodedToken.exp * 1000 < Date.now()) {
-          localStorage.removeItem("jwtToken");
-          setUser(null);
-        } else {
-          setUser(decodedToken);
-        }
-      } catch (e) {
-        console.log("Failed to decode token: ", e);
+  // Function to get user data from token
+  const getUserFromToken = (token: string): UserData | null => {
+    try {
+      const decodedToken = jwtDecode<JwtPayload>(token);
+
+      // Check if token is expired
+      if (decodedToken.exp && decodedToken.exp * 1000 < Date.now()) {
+        return null;
       }
+
+      // Get userId from token or localStorage
+      const userId = decodedToken.userId || localStorage.getItem("userId");
+
+      if (!userId) {
+        return null;
+      }
+
+      // Create user data
+      return {
+        userId,
+        name: decodedToken.username || "",
+        email: decodedToken.email || "",
+      };
+    } catch (e) {
+      console.error("Failed to decode token: ", e);
+      return null;
     }
+  };
+
+  // Load user on initial render or when token changes
+  useEffect(() => {
+    const loadUser = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const userData = getUserFromToken(token);
+      if (userData) {
+        setUser(userData);
+      } else {
+        // Token is invalid or expired
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+        setUser(null);
+      }
+
+      setLoading(false);
+    };
+
+    loadUser();
   }, []);
 
   const signIn = (token: string) => {
-    const userData: UserData = jwtDecode(token);
-    setUser(userData);
-    console.log("UserData: ", userData);
-    localStorage.setItem("jwtToken", JSON.stringify(userData));
-    _setLoading(false);
+    try {
+      const userData = getUserFromToken(token);
+
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem("token", token);
+        localStorage.setItem("userId", userData.userId);
+      } else {
+        throw new Error("Invalid token");
+      }
+    } catch (e) {
+      console.error("Failed to sign in: ", e);
+    }
+
+    setLoading(false);
   };
 
   const signOut = () => {
-    localStorage.removeItem("jwtToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
     setUser(null);
   };
 

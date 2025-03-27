@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 // import { v4 as uuidv4 } from "uuid";
 import { Toolbar } from "@material-ui/core";
 import { Snackbar } from "@mui/material";
-import { Alert } from "@mui/material";
+import { Alert, AlertProps } from "@mui/material";
 import { SectionController } from "../formController/sectionController";
 import { Form } from "../../../interface/interface";
 import { useStyles } from "../formbuilderStyle";
@@ -13,6 +13,7 @@ import { SectionEditor } from "./sectionEditor";
 import FormPreview from "../../formPreview/formPreview";
 import Button from "@mui/material/Button";
 import testData from "./testData.json";
+import api from "../../../config/api";
 // import sampleTestData from "./sampleTestData.json";
 
 interface RouteParams extends Record<string, string> {
@@ -20,48 +21,103 @@ interface RouteParams extends Record<string, string> {
   id: string;
 }
 
+interface SnackbarState {
+  open: boolean;
+  message: string;
+  severity: AlertProps["severity"];
+}
+
+// Extended Form interface to include _id for MongoDB
+interface ExtendedForm extends Form {
+  _id?: string;
+}
+
+// Define a more specific error type for API errors
+type APIError = Error & {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 const FormBuilder: React.FC = () => {
   const { userId, id: formId } = useParams<RouteParams>();
+  console.log(`userId: ${userId} formId: ${formId}`);
   const classes = useStyles();
 
-  // const userId = localStorage.getItem("userId");
-  // const userId = "user123";
-
-  const [snackbar, setSnackbar] = useState({
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: "",
     severity: "success",
   });
 
-  const [form, setForm] = useState<Form>(testData as Form);
-  // const [form, setForm] = useState<Form>(sampleTestData as Form);
+  const [form, setForm] = useState<ExtendedForm>(testData as ExtendedForm);
   const [activeSection, setActiveSection] = useState(0);
   const [isPreview, setIsPreview] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isExistingForm, setIsExistingForm] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Fetch form if it exists when component mounts
+  useEffect(() => {
+    const checkExistingForm = async () => {
+      if (!userId || !formId) return;
+
+      try {
+        setIsLoading(true);
+        // Try to get form by formId - use the correct route path
+        const response = await api.get(`/forms/byFormId/${formId}`);
+        if (response.data) {
+          console.log("Existing form found:", response.data);
+          setForm(response.data);
+          setIsExistingForm(true);
+        }
+      } catch (error) {
+        // If form doesn't exist, just keep the default template
+        console.log("No existing form found, creating new form", error);
+        // Update formId in the template form
+        setForm((prev) => ({
+          ...prev,
+          formId,
+          userId, // Include userId in new form data
+        }));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkExistingForm();
+  }, [userId, formId]);
 
   useEffect(() => {
     // Ensure that each question gets the correct sectionId and questionId in its options.
-    setForm((prevForm) => {
-      return {
-        ...prevForm,
-        sections: prevForm.sections.map((section) => {
-          const updatedQuestions = section.questions.map((q) => ({
-            ...q,
-            sectionId: section.SectionId,
-            options: q.options.map((opt) => ({
-              ...opt,
-              questionId: q.questionId,
-            })),
-          }));
-          return { ...section, questions: updatedQuestions };
-        }),
-      };
-    });
-  }, []);
+    if (!isLoading) {
+      setForm((prevForm) => {
+        return {
+          ...prevForm,
+          sections: prevForm.sections.map((section) => {
+            const updatedQuestions = section.questions.map((q) => ({
+              ...q,
+              sectionId: section.SectionId,
+              options: q.options.map((opt) => ({
+                ...opt,
+                questionId: q.questionId,
+              })),
+            }));
+            return { ...section, questions: updatedQuestions };
+          }),
+        };
+      });
+    }
+  }, [isLoading]);
 
   useEffect(() => {
-    console.log("Form is updated");
-    localStorage.setItem(form.formId, JSON.stringify(form));
-  }, [form]);
+    if (!isLoading) {
+      console.log("Form is updated");
+      localStorage.setItem(form.formId, JSON.stringify(form));
+    }
+  }, [form, isLoading]);
 
   const handleAddSection = () => {
     try {
@@ -72,10 +128,11 @@ const FormBuilder: React.FC = () => {
         message: "Section added successfully.",
         severity: "success",
       });
-    } catch (err: Error | any) {
+    } catch (err) {
+      const error = err as APIError;
       setSnackbar({
         open: true,
-        message: `Error adding section: ${err.message}`,
+        message: `Error adding section: ${error.message}`,
         severity: "error",
       });
     }
@@ -91,10 +148,11 @@ const FormBuilder: React.FC = () => {
         message: "Section deleted successfully.",
         severity: "success",
       });
-    } catch (err: Error | any) {
+    } catch (err) {
+      const error = err as APIError;
       setSnackbar({
         open: true,
-        message: `Error deleting section: ${err.message}`,
+        message: `Error deleting section: ${error.message}`,
         severity: "error",
       });
     }
@@ -114,48 +172,86 @@ const FormBuilder: React.FC = () => {
         message: "Section title updated successfully.",
         severity: "success",
       });
-    } catch (err: Error | any) {
+    } catch (err) {
+      const error = err as APIError;
       setSnackbar({
         open: true,
-        message: `Error updating section title: ${err.message}`,
+        message: `Error updating section title: ${error.message}`,
         severity: "error",
       });
     }
   };
 
-  // saving the form to the backend Route , later to be changed to env backend url
+  // saving the form to the backend
   const handleSave = async () => {
     try {
-      // const response = await fetch("/api/saveForm", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(form),
-      // });
-      // if (!response.ok) {
-      //   throw new Error("Failed to save form");
-      // }
-      // const savedForm = await response.json();
-      // console.log("Saved form:", savedForm);
+      setIsSaving(true);
+      // Prepare form data for submission
+      const formData = {
+        formId: formId, // Use the formId from URL params
+        userId: userId, // Include userId for validation
+        formTitle: form.formTitle || "Untitled Form",
+        order: form.order || 1,
+        sections: form.sections.map((section) => ({
+          SectionId: section.SectionId,
+          sectionTitle: section.sectionTitle,
+          description: section.description,
+          order: section.order,
+          questions: section.questions.map((question) => ({
+            questionId: question.questionId,
+            questionText: question.questionText,
+            type: question.type,
+            isRequired: question.isRequired,
+            order: question.order,
+            scaleRange: question.scaleRange,
+            scaleLabels: question.scaleLabels,
+            options: question.options,
+            dependencies: question.dependencies || [],
+          })),
+        })),
+      };
+
+      let response;
+      const successMessage = isExistingForm
+        ? "Form updated successfully."
+        : "Form saved successfully.";
+
+      if (isExistingForm) {
+        // Update existing form using formId instead of _id - use the correct route path
+        response = await api.put(`/forms/byFormId/${formId}`, formData);
+      } else {
+        // Create new form
+        response = await api.post("/forms", formData);
+        // Mark as existing form after first save
+        setIsExistingForm(true);
+      }
+
+      const savedForm = response.data;
+      console.log("Saved form:", savedForm);
+
       setSnackbar({
         open: true,
-        message: "Form saved successfully.",
+        message: successMessage,
         severity: "success",
       });
-      window.location.href = `/${userId}/${formId}/sub`;
-    } catch (err: Error | any) {
+
+      // Navigate to form submission page
+      setTimeout(() => {
+        window.location.href = `/${userId}/${formId}/sub`;
+      }, 1500);
+    } catch (err) {
+      const error = err as APIError;
+      const errorMessage =
+        error.response?.data?.message || error.message || "Error saving form";
       setSnackbar({
         open: true,
-        message: `Error saving form: ${err.message}`,
+        message: `Error saving form: ${errorMessage}`,
         severity: "error",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
-
-  // const handleViewResponse = () => {
-  //   window.location.href = `/${userId}/${formId}/resp`;
-  // };
 
   const handleUpdateSectionDescription = (sectionId: string, desc: string) => {
     try {
@@ -170,20 +266,28 @@ const FormBuilder: React.FC = () => {
         message: "Section description updated successfully.",
         severity: "success",
       });
-    } catch (err: Error | any) {
+    } catch (err) {
+      const error = err as APIError;
       setSnackbar({
         open: true,
-        message: `Error updating section description: ${err.message}`,
+        message: `Error updating section description: ${error.message}`,
         severity: "error",
       });
     }
   };
+
+  if (isLoading) {
+    return <div className={classes.root}>Loading form...</div>;
+  }
+
   return (
     <div className={classes.root}>
       <HeaderBar
         onPreview={() => setIsPreview(true)}
-        onSave={() => handleSave()}
-        onViewResponse={() => setIsPreview(true)}
+        onSave={handleSave}
+        onViewResponse={() => {}}
+        isSaving={isSaving}
+        isExistingForm={isExistingForm}
       />
       <Toolbar />
       <div className={classes.contentContainer}>
@@ -216,7 +320,7 @@ const FormBuilder: React.FC = () => {
       >
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          // severity={snackbar.severity}
+          severity={snackbar.severity}
         >
           {snackbar.message}
         </Alert>
