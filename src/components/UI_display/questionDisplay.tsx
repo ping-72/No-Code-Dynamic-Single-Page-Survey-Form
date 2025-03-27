@@ -6,7 +6,6 @@ import {
   Checkbox,
   FormControlLabel,
   FormControl,
-  // FormLabel,
   FormGroup,
   Slider,
   Typography,
@@ -14,28 +13,22 @@ import {
   useTheme,
   useMediaQuery,
   InputAdornment,
-  // FormHelperText,
   Paper,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import ErrorIcon from "@material-ui/icons/Error";
-import { Question as BaseQuestion } from "../../interface/interface";
+import {
+  Question as BaseQuestion,
+  // QuestionType,
+  // Option,
+} from "../../interface/interface";
 import TableDisplay from "./tableDisplay";
-import { TableData } from "./tableDisplay";
 
 // Extend the base Question interface to include the properties we need
 interface Question extends BaseQuestion {
   description?: string;
   placeholder?: string;
   unit?: string;
-  tableData?: {
-    columns: string[];
-    rows: Array<{
-      attributeName: string;
-      attributeId: string;
-      value: string | number | boolean | null;
-    }>;
-  };
   sliderConfig?: {
     min: number;
     max: number;
@@ -102,10 +95,34 @@ const useStyles = makeStyles((theme) => ({
   checkboxGroup: {
     display: "flex",
     flexDirection: "column",
-    marginLeft: theme.spacing(1),
+    marginLeft: 0,
+    alignItems: "flex-start",
+    width: "100%",
   },
   radioGroup: {
-    marginLeft: theme.spacing(1),
+    marginLeft: 0,
+    alignItems: "flex-start",
+    width: "100%",
+  },
+  formControlLabel: {
+    marginLeft: 0,
+    marginRight: 0,
+    width: "100%",
+    paddingLeft: 0,
+    "& .MuiFormControlLabel-label": {
+      textAlign: "left",
+      marginLeft: theme.spacing(1),
+    },
+    "& .MuiCheckbox-root, & .MuiRadio-root": {
+      padding: 0,
+    },
+  },
+  formControl: {
+    width: "100%",
+    "& .MuiFormGroup-root": {
+      marginLeft: 0,
+      width: "100%",
+    },
   },
   sliderValue: {
     display: "flex",
@@ -178,14 +195,22 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onChange(question.questionId, e.target.value);
   };
 
-  const handleSliderChange = (_: any, newValue: number | number[]) => {
+  const handleSliderChange = (
+    _: React.ChangeEvent<Record<string, unknown>>,
+    newValue: number | number[]
+  ) => {
     onChange(question.questionId, newValue as number);
   };
 
   const handleTableColumnSelect = (columnIndex: number) => {
     // Get the column name that was selected
-    if (question.tableData && question.tableData.columns) {
-      const selectedColumn = question.tableData.columns[columnIndex];
+    if (
+      question.options &&
+      question.options.length > 0 &&
+      question.options[0].tableData &&
+      question.options[0].tableData.columns
+    ) {
+      const selectedColumn = question.options[0].tableData.columns[columnIndex];
       onChange(question.questionId, selectedColumn);
     }
   };
@@ -194,28 +219,36 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     return Array.isArray(value) && value.includes(optionValue);
   };
 
-  const formatTableData = (): TableData | null => {
-    if (!question.tableData) return null;
+  const formatTableData = () => {
+    // Check if we have table data through options
+    if (
+      question.options &&
+      question.options.length > 0 &&
+      question.options[0].tableData
+    ) {
+      const tableData = question.options[0].tableData;
+      const headers = tableData.columns || [];
 
-    // Convert the question's tableData to the format expected by TableDisplay
-    const headers = question.tableData.columns || [];
+      // Transform rows into the expected format
+      const rows = tableData.rows.map((row) => ({
+        name: row.attributeName,
+        value: row.value,
+      }));
 
-    const rows = question.tableData.rows.map((row) => ({
-      name: row.attributeName,
-      value: row.value,
-    }));
+      // Find the index of the selected column
+      const selectedColumnIndex = headers.findIndex(
+        (header) => header === value
+      );
 
-    // Find the index of the selected column
-    const selectedColumnIndex = headers.findIndex(
-      (header: string) => header === value
-    );
+      return {
+        headers,
+        rows,
+        selectedColumn:
+          selectedColumnIndex >= 0 ? selectedColumnIndex : undefined,
+      };
+    }
 
-    return {
-      headers,
-      rows,
-      selectedColumn:
-        selectedColumnIndex >= 0 ? selectedColumnIndex : undefined,
-    };
+    return null;
   };
 
   return (
@@ -241,7 +274,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       )}
 
       {(() => {
-        if (question.type === "text" || question.type === "email") {
+        if (question.type === "text") {
           return (
             <TextField
               variant="outlined"
@@ -252,7 +285,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               error={!!error}
               className={classes.input}
               placeholder={question.placeholder || "Your answer"}
-              type={question.type === "email" ? "email" : "text"}
+              type={question.type}
             />
           );
         }
@@ -282,20 +315,25 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
         if (question.type === "multi-select" && question.options) {
           return (
-            <FormControl component="fieldset" error={!!error}>
+            <FormControl
+              component="fieldset"
+              error={!!error}
+              className={classes.formControl}
+            >
               <FormGroup className={classes.checkboxGroup}>
                 {question.options.map((option) => (
                   <FormControlLabel
-                    key={option.value}
+                    key={option.optionId}
                     control={
                       <Checkbox
-                        checked={isCheckboxSelected(option.value)}
+                        checked={isCheckboxSelected(option.value || "")}
                         onChange={handleCheckboxChange}
-                        value={option.value}
+                        value={option.value || ""}
                         color="primary"
                       />
                     }
-                    label={option.label}
+                    label={option.value || ""}
+                    className={classes.formControlLabel}
                   />
                 ))}
               </FormGroup>
@@ -303,9 +341,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           );
         }
 
-        if (question.type === "select" && question.options) {
+        if (question.type === "single-select" && question.options) {
           return (
-            <FormControl component="fieldset" error={!!error}>
+            <FormControl
+              component="fieldset"
+              error={!!error}
+              className={classes.formControl}
+            >
               <RadioGroup
                 value={value || ""}
                 onChange={handleRadioChange}
@@ -313,10 +355,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               >
                 {question.options.map((option) => (
                   <FormControlLabel
-                    key={option.value}
-                    value={option.value}
+                    key={option.optionId}
+                    value={option.value || ""}
                     control={<Radio color="primary" />}
-                    label={option.label}
+                    label={option.value || ""}
+                    className={classes.formControlLabel}
                   />
                 ))}
               </RadioGroup>
@@ -324,32 +367,42 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           );
         }
 
-        if (question.type === "slider" && question.sliderConfig) {
-          const { min, max, step, labels } = question.sliderConfig;
+        if (question.type === "linear-scale") {
+          // Use default slider config if not provided
+          const sliderConfig = question.sliderConfig || {
+            min: 1,
+            max: 5,
+            step: 1,
+            labels: {
+              start: "Low",
+              end: "High",
+            },
+          };
+
           return (
             <div className={classes.sliderContainer}>
               <Slider
-                value={typeof value === "number" ? value : min}
+                value={typeof value === "number" ? value : sliderConfig.min}
                 onChange={handleSliderChange}
                 aria-labelledby="slider-value"
                 valueLabelDisplay="auto"
-                step={step}
+                step={sliderConfig.step}
                 marks
-                min={min}
-                max={max}
+                min={sliderConfig.min}
+                max={sliderConfig.max}
                 color="primary"
               />
               <Box className={classes.sliderValue}>
-                {labels && (
+                {sliderConfig.labels && (
                   <>
                     <Typography className={classes.sliderLabel}>
-                      {labels.start}
+                      {sliderConfig.labels.start}
                     </Typography>
                     <div className={classes.sliderValueContainer}>
-                      {typeof value === "number" ? value : min}
+                      {typeof value === "number" ? value : sliderConfig.min}
                     </div>
                     <Typography className={classes.sliderLabel}>
-                      {labels.end}
+                      {sliderConfig.labels.end}
                     </Typography>
                   </>
                 )}
@@ -366,7 +419,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                 <TableDisplay
                   data={tableData}
                   onChange={handleTableColumnSelect}
-                  error={error}
+                  error={!!error}
                 />
               )}
             </div>

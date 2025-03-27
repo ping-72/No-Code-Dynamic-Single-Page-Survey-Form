@@ -1,11 +1,17 @@
 // TableCellRenderer.tsx
 import React from "react";
 import { Typography } from "@material-ui/core";
-import { FunctionDependency } from "../../interface/interface";
 import { evaluate } from "mathjs";
 
+interface FunctionValue {
+  type: "function";
+  expression: string;
+}
+
+type CellValue = string | number | boolean | null | FunctionValue;
+
 interface TableCellRendererProps {
-  cellValue: string | number | FunctionDependency;
+  cellValue: CellValue;
   inputValue?: number;
 }
 
@@ -13,8 +19,20 @@ const TableCellRenderer: React.FC<TableCellRendererProps> = ({
   cellValue,
   inputValue,
 }) => {
-  if (typeof cellValue === "object" && cellValue.type === "function") {
-    let expr = cellValue.expression; // e.g., "{input} * 2 + 6"
+  if (cellValue === null || cellValue === undefined) {
+    return <Typography color="textSecondary">-</Typography>;
+  }
+
+  if (typeof cellValue === "boolean") {
+    return <Typography>{cellValue ? "Yes" : "No"}</Typography>;
+  }
+
+  if (
+    typeof cellValue === "object" &&
+    "type" in cellValue &&
+    cellValue.type === "function"
+  ) {
+    let expr = cellValue.expression;
     if (expr.includes("{input}")) {
       if (inputValue === undefined) {
         return <Typography color="error">Missing input</Typography>;
@@ -24,11 +42,14 @@ const TableCellRenderer: React.FC<TableCellRendererProps> = ({
     try {
       const result = evaluate(expr);
       return <Typography>{result}</Typography>;
-    } catch (error: any) {
-      return <Typography color="error">Error: {error.message}</Typography>;
+    } catch (error) {
+      return (
+        <Typography color="error">Error: {(error as Error).message}</Typography>
+      );
     }
   }
-  return <Typography>{cellValue as string}</Typography>;
+
+  return <Typography>{cellValue}</Typography>;
 };
 
 export default TableCellRenderer;

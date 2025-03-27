@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Paper,
   Typography,
   Box,
   Table,
@@ -14,7 +13,6 @@ import {
   IconButton,
   Tooltip,
   useTheme,
-  useMediaQuery,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -27,6 +25,13 @@ interface RouteParams extends Record<string, string | undefined> {
   formId: string;
 }
 
+interface QuestionResponse {
+  questionId: string;
+  questionType: string;
+  response: string | number | boolean | string[] | null;
+  responseId?: string;
+}
+
 interface Submission {
   _id: string;
   userId: string;
@@ -35,12 +40,7 @@ interface Submission {
     sections: Array<{
       sectionId: string;
       sectionTitle: string;
-      questions: Array<{
-        questionId: string;
-        questionType: string;
-        response: any;
-        responseId?: string;
-      }>;
+      questions: QuestionResponse[];
     }>;
   };
   status: string;
@@ -112,7 +112,6 @@ const ManageResponses: React.FC = () => {
   const { userId, formId } = useParams<RouteParams>();
   const classes = useStyles();
   const theme = useTheme();
-  const _isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +123,6 @@ const ManageResponses: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Use the public endpoint to get form submissions
         const response = await api.get(
           `/data/public/form-with-submissions/${formId}?userId=${userId}`
         );
@@ -134,9 +132,11 @@ const ManageResponses: React.FC = () => {
         } else {
           throw new Error("No submissions data received");
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Error fetching submissions:", err);
-        setError(err.message || "Failed to fetch submissions");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch submissions"
+        );
       } finally {
         setLoading(false);
       }
@@ -163,7 +163,7 @@ const ManageResponses: React.FC = () => {
     }
   };
 
-  const formatResponse = (response: any): string => {
+  const formatResponse = (response: QuestionResponse["response"]): string => {
     if (response === null || response === undefined) return "-";
     if (Array.isArray(response)) return response.join(", ");
     return String(response);
@@ -271,8 +271,8 @@ const ManageResponses: React.FC = () => {
                     <Tooltip title="Delete">
                       <IconButton
                         size="small"
-                        color="error"
                         onClick={() => handleDelete(submission._id)}
+                        style={{ color: theme.palette.error.main }}
                       >
                         <DeleteIcon />
                       </IconButton>

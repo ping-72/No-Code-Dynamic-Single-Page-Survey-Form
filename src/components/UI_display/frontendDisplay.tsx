@@ -20,7 +20,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import ErrorIcon from "@material-ui/icons/Error";
 import { useParams } from "react-router-dom";
-import { Form, Question } from "../../interface/interface";
+import { Form } from "../../interface/interface";
 import testData from "../formBuilder/new file structure/testData.json";
 import SectionDisplay from "./sectionDisplay";
 import api from "../../config/api";
@@ -333,7 +333,7 @@ const FrontendDisplay: React.FC = () => {
 
   // Validate specific question types
   const validateQuestionType = (
-    question: Question,
+    question: any,
     response: FormResponse,
     errors: ValidationError[]
   ) => {

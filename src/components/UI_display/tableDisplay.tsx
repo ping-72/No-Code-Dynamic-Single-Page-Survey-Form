@@ -1,4 +1,3 @@
-// TableDisplay.tsx
 import React from "react";
 import {
   Table,
@@ -11,21 +10,19 @@ import {
   Radio,
   Typography,
   FormControl,
-  FormHelperText,
   Box,
+  FormHelperText,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import TableCellRenderer from "./tableCellRenderer";
 
-export interface Attribute {
-  name: string;
-  value: string | number | boolean | null;
-}
-
 // Define the structure for table data
 export interface TableData {
   headers: string[];
-  rows: Attribute[];
+  rows: {
+    name: string;
+    value: any;
+  }[];
   selectedColumn?: number;
 }
 
@@ -88,24 +85,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface TableDisplayProps {
-  tableData: TableData;
-  selectedValue: string;
-  onRadioChange: (value: string) => void;
+  data: TableData;
+  onChange: (columnIndex: number) => void;
   error?: boolean;
-  errorMessage?: string | null;
 }
 
 const TableDisplay: React.FC<TableDisplayProps> = ({
-  tableData,
-  selectedValue,
-  onRadioChange,
+  data,
+  onChange,
   error = false,
-  errorMessage = null,
 }) => {
   const classes = useStyles();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onRadioChange(event.target.value);
+    const columnIndex = parseInt(event.target.value, 10);
+    onChange(columnIndex);
   };
 
   return (
@@ -116,16 +110,15 @@ const TableDisplay: React.FC<TableDisplayProps> = ({
             <TableHead>
               <TableRow>
                 <TableCell className={classes.headerCell}></TableCell>
-                {tableData.headers.map((column, index) => (
+                {data.headers.map((header, index) => (
                   <TableCell key={index} className={classes.headerCell}>
-                    {column}
+                    {header}
                   </TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* Attribute rows */}
-              {tableData.rows.map((row, rowIndex) => (
+              {data.rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.name || rowIndex}
                   className={
@@ -135,30 +128,37 @@ const TableDisplay: React.FC<TableDisplayProps> = ({
                   <TableCell className={classes.attributeCell}>
                     {row.name}
                   </TableCell>
-                  {tableData.headers.map((column, colIndex) => (
-                    <TableCell
-                      key={`${row.name}-${colIndex}`}
-                      className={classes.dataCell}
-                    >
-                      <TableCellRenderer cellValue={row.value} />
-                    </TableCell>
-                  ))}
+                  {data.headers.map((header, colIndex) => {
+                    // Handle different value structures
+                    let cellValue = row.value;
+                    if (typeof row.value === "object" && row.value !== null) {
+                      cellValue = row.value[header] || "";
+                    }
+
+                    return (
+                      <TableCell
+                        key={`${row.name}-${colIndex}`}
+                        className={classes.dataCell}
+                      >
+                        <TableCellRenderer cellValue={cellValue} />
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))}
 
-              {/* Selection row with radio buttons */}
               <TableRow className={classes.selectRow}>
                 <TableCell className={classes.attributeCell}>
                   <Typography variant="body2" color="textSecondary">
                     Select option:
                   </Typography>
                 </TableCell>
-                {tableData.headers.map((column, index) => (
+                {data.headers.map((_, index) => (
                   <TableCell key={index} className={classes.selectCell}>
                     <Radio
-                      checked={selectedValue === column}
+                      checked={data.selectedColumn === index}
                       onChange={handleChange}
-                      value={column}
+                      value={index}
                       name="column-selection"
                       color="primary"
                     />
@@ -169,7 +169,7 @@ const TableDisplay: React.FC<TableDisplayProps> = ({
           </Table>
         </TableContainer>
       </Box>
-      {errorMessage && <FormHelperText error>{errorMessage}</FormHelperText>}
+      {error && <FormHelperText error>Please select an option</FormHelperText>}
     </FormControl>
   );
 };
