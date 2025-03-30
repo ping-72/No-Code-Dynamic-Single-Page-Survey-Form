@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from "react";
 import "./template.css";
 import { v1 as uuidv1 } from "uuid";
-import { Add } from "@material-ui/icons";
+import { Add, Edit, Visibility, MoreVert } from "@material-ui/icons";
 import { useNavigate, useParams } from "react-router-dom";
-import { IconButton } from "@material-ui/core";
-import MoreVertIcon from "@material-ui/icons/MoreVert";
+import {
+  IconButton,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  CircularProgress,
+  Box,
+} from "@material-ui/core";
 import DashboardHeader from "./DashboardHeader";
 import api from "../../config/api";
 
@@ -60,64 +68,117 @@ const Template: React.FC = () => {
   };
 
   return (
-    <>
+    <Box className="template-container">
       <DashboardHeader />
-      <div className="template">
-        <br />
-        <div className="template-head">
-          <div className="template-left">
-            <span>Start a new form</span>
-          </div>
-          <div className="template-right">
+      <Box className="template-content">
+        <Box className="template-header">
+          <Typography variant="h4" component="h1" className="template-title">
+            Forms Dashboard
+          </Typography>
+          <Box className="template-actions">
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Add />}
+              onClick={createFormHandle}
+              className="create-form-button"
+            >
+              Create New Form
+            </Button>
             <IconButton>
-              <MoreVertIcon />
+              <MoreVert />
             </IconButton>
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div className="template-main">
-          <div className="template-blank-form" onClick={createFormHandle}>
-            <Add></Add>{" "}
-          </div>
-          <br />
-          <hr />
-          <hr />
-          <hr />
-          <hr />
-          <span className={`${""} span`}>Previous Forms</span>
-          <br />
-          <br />
-
+        <Box className="template-main">
           {loading ? (
-            <div>Loading your forms...</div>
+            <Box className="loading-container">
+              <CircularProgress />
+              <Typography variant="body1" className="loading-text">
+                Loading your forms...
+              </Typography>
+            </Box>
           ) : error ? (
-            <div className="error-message">{error}</div>
+            <Card className="error-card">
+              <CardContent>
+                <Typography color="error" variant="h6">
+                  {error}
+                </Typography>
+              </CardContent>
+            </Card>
           ) : forms.length === 0 ? (
-            <div>No forms found. Create your first form!</div>
+            <Card className="empty-state-card">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  No Forms Found
+                </Typography>
+                <Typography variant="body1" color="textSecondary">
+                  Get started by creating your first form!
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<Add />}
+                  onClick={createFormHandle}
+                  className="create-first-form-button"
+                >
+                  Create Your First Form
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
-            <div className="forms-container">
+            <Grid container spacing={3}>
               {forms.map((form) => (
-                <div key={form._id} className="form-card">
-                  <h3>{form.formTitle}</h3>
-                  <p>Created: {formatDate(form.createdAt)}</p>
-                  <p>Last updated: {formatDate(form.updatedAt)}</p>
-                  <div className="form-actions">
-                    <button onClick={() => handleEditForm(form.formId)}>
-                      Edit
-                    </button>
-                    <button onClick={() => handleViewResponses(form._id)}>
-                      View Responses
-                    </button>
-                  </div>
-                </div>
+                <Grid item xs={12} sm={6} md={4} key={form._id}>
+                  <Card className="form-card">
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {form.formTitle}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        gutterBottom
+                      >
+                        Created: {formatDate(form.createdAt)}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        gutterBottom
+                      >
+                        Last updated: {formatDate(form.updatedAt)}
+                      </Typography>
+                      <Box className="form-actions">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          startIcon={<Edit />}
+                          onClick={() => handleEditForm(form.formId)}
+                          className="action-button"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          startIcon={<Visibility />}
+                          onClick={() => handleViewResponses(form._id)}
+                          className="action-button"
+                        >
+                          View Responses
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
               ))}
-            </div>
+            </Grid>
           )}
-          <br />
-          <br />
-        </div>
-      </div>
-    </>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
