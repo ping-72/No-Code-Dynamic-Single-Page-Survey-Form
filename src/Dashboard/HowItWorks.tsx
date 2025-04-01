@@ -1,84 +1,66 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
+import { Box, Container, Grid, Typography } from "@material-ui/core";
+import { Create, Build, Share, Assessment } from "@material-ui/icons";
 import styles from "./HowItWorks.module.css";
 
-interface Step {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-}
-
-const steps: Step[] = [
+const steps = [
   {
-    id: 1,
-    title: "Create Your Survey",
+    icon: <Create />,
+    title: "Create Your Form",
     description:
-      "Use our intuitive editor to build your survey structure with just a few clicks.",
-    icon: "/icons/create.svg", // Replace with the actual path to your icon
+      "Start with a blank canvas or choose from our pre-built templates. Add questions, customize fields, and set up your form structure.",
   },
   {
-    id: 2,
-    title: "Customize with Intuitive Tools",
+    icon: <Build />,
+    title: "Customize & Design",
     description:
-      "Easily adjust question types, add logic, and manage dependencies.",
-    icon: "/icons/customize.svg",
+      "Personalize your form with custom colors, fonts, and layouts. Add logic jumps, validation rules, and conditional questions.",
   },
   {
-    id: 3,
-    title: "Launch & Collect Responses",
+    icon: <Share />,
+    title: "Share & Collect",
     description:
-      "Deploy your survey instantly and track responses in real-time.",
-    icon: "/icons/launch.svg",
+      "Get a unique link to share your form. Embed it on your website or share via email. Start collecting responses instantly.",
+  },
+  {
+    icon: <Assessment />,
+    title: "Analyze Results",
+    description:
+      "View responses in real-time, generate reports, and analyze data. Export results in various formats for further analysis.",
   },
 ];
 
 const HowItWorks: React.FC = () => {
-  const [animate, setAnimate] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setAnimate(true);
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <section ref={sectionRef} className={styles.howItWorks}>
-      <div className={styles.container}>
-        <h2 className={`${styles.title} ${animate ? styles.animateTitle : ""}`}>
-          How It Works
-        </h2>
-        <div className={styles.steps}>
+    <Box className={styles.howItWorks}>
+      <Container maxWidth="lg">
+        <Box className={styles.header}>
+          <Typography variant="h2" className={styles.title}>
+            How It Works
+          </Typography>
+          <Typography variant="h6" className={styles.subtitle}>
+            Create and share your survey forms in four simple steps
+          </Typography>
+        </Box>
+
+        <Grid container spacing={4}>
           {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className={`${styles.step} ${animate ? styles.animateStep : ""}`}
-              style={{ animationDelay: `${index * 0.3}s` }}
-            >
-              <img
-                src={step.icon}
-                alt={step.title}
-                className={styles.stepIcon}
-              />
-              <h3 className={styles.stepTitle}>{step.title}</h3>
-              <p className={styles.stepDescription}>{step.description}</p>
-            </div>
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Box className={styles.stepCard}>
+                <Box className={styles.stepNumber}>{index + 1}</Box>
+                <Box className={styles.iconWrapper}>{step.icon}</Box>
+                <Typography variant="h6" className={styles.stepTitle}>
+                  {step.title}
+                </Typography>
+                <Typography variant="body1" className={styles.stepDescription}>
+                  {step.description}
+                </Typography>
+              </Box>
+            </Grid>
           ))}
-        </div>
-      </div>
-    </section>
+        </Grid>
+      </Container>
+    </Box>
   );
 };
 

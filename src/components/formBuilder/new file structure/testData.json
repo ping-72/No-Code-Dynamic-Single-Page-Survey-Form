@@ -1,23 +1,24 @@
 {
-  "formId": "137bc5e0-e5fd-11ef-923d-67b15e229d1e",
+  "formId": "{{formId || uuidv4()}}",
   "formTitle": "This is a test form.....",
-  "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+  "description": "Test Description of the form.",
   "order": 0,
-  "createdAt": "2025-02-08T09:24:46.233Z",
-  "updatedAt": "2025-02-08T09:35:42.772Z",
+  "createdAt": "{{new Date().toISOString()}}",
+  "updatedAt": "{{new Date().toISOString()}}",
   "sections": [
     {
-      "SectionId": "9fd0272f-5719-4727-8704-d9030d6efc70",
-      "formId": "137bc5e0-e5fd-11ef-923d-67b15e229d1e",
-      "sectionTitle": "Introduction",
-      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "SectionId": "{{uuidv4()}}",
+      "formId": "{{formId || ''}}",
+      "sectionTitle": "Socio-Demographic Information",
+      "description": "Please provide your basic information",
       "questions": [],
       "order": 0,
-      "createdAt": "2025-02-08T09:24:46.233Z"
+      "type": "regular",
+      "createdAt": "{{new Date().toISOString()}}"
     },
     {
       "SectionId": "c52c2112-d3a6-40c4-81d7-96d7f803b12f",
-      "formId": "137bc5e0-e5fd-11ef-923d-67b15e229d1e",
+      "formId": "{{formId || ''}}",
       "sectionTitle": "Socio-Demographic Information",
       "description": "This section represent the Socio-Demographic Information.",
       "questions": [
@@ -41,7 +42,7 @@
             }
           ],
           "order": 0,
-          "createdAt": "2025-02-08T09:24:46.233Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": []
         },
         {
@@ -59,7 +60,7 @@
             }
           ],
           "order": 1,
-          "createdAt": "2025-02-08T09:24:46.233Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": [
             {
               "optionId": "student",
@@ -94,16 +95,16 @@
           "type": "linear-scale",
           "isRequired": true,
           "order": 2,
-          "createdAt": "2025-02-08T09:24:57.722Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": []
         }
       ],
       "order": 1,
-      "createdAt": "2025-02-08T09:24:46.233Z"
+      "createdAt": "{{new Date().toISOString()}}"
     },
     {
       "SectionId": "73800cae-3a7f-403a-9651-d6123d4d22f4",
-      "formId": "137bc5e0-e5fd-11ef-923d-67b15e229d1e",
+      "formId": "{{formId || ''}}",
       "sectionTitle": "Test Section 1",
       "description": "",
       "questions": [
@@ -114,7 +115,7 @@
           "type": "table",
           "isRequired": true,
           "order": 0,
-          "createdAt": "2025-02-08T09:29:08.283Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": [
             {
               "optionId": "07f9f181-82ae-4813-93cf-bf63e1c73229",
@@ -170,7 +171,7 @@
           "type": "single-select",
           "isRequired": false,
           "order": 1,
-          "createdAt": "2025-02-08T09:31:31.987Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": [
             {
               "optionId": "2004bfe3-be20-405f-aa5c-c9b10b4fbbe8",
@@ -209,7 +210,7 @@
           "type": "multi-select",
           "isRequired": true,
           "order": 2,
-          "createdAt": "2025-02-08T09:32:35.729Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": [
             {
               "optionId": "e5f57d89-875f-4384-bdb5-e52da5719bf2",
@@ -248,7 +249,7 @@
           "type": "text",
           "isRequired": false,
           "order": 3,
-          "createdAt": "2025-02-08T09:34:16.090Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": [],
           "dependentOn": [
             {
@@ -266,20 +267,20 @@
         }
       ],
       "order": 2,
-      "createdAt": "2025-02-08T09:29:00.018Z"
+      "createdAt": "{{new Date().toISOString()}}"
     },
     {
       "SectionId": "2f78e9b8-bd35-409c-bc8c-d3190384c654",
-      "formId": "137bc5e0-e5fd-11ef-923d-67b15e229d1e",
+      "formId": "{{formId || ''}}",
       "sectionTitle": "Test Section 2",
       "description": "",
       "questions": [],
       "order": 3,
-      "createdAt": "2025-02-08T09:35:01.993Z"
+      "createdAt": "{{new Date().toISOString()}}"
     },
     {
       "SectionId": "a5a85bff-85d0-4624-b30c-893ee1693413",
-      "formId": "137bc5e0-e5fd-11ef-923d-67b15e229d1e",
+      "formId": "{{formId || ''}}",
       "sectionTitle": "Test Section 3",
       "description": "",
       "questions": [
@@ -290,7 +291,7 @@
           "type": "single-select",
           "isRequired": true,
           "order": 0,
-          "createdAt": "2025-02-08T09:35:11.299Z",
+          "createdAt": "{{new Date().toISOString()}}",
           "options": [
             {
               "optionId": "9a5a7f11-42a1-4f1e-9a2c-5a6b22c0b7c3",
@@ -317,7 +318,7 @@
         }
       ],
       "order": 4,
-      "createdAt": "2025-02-08T09:35:10.034Z"
+      "createdAt": "{{new Date().toISOString()}}"
     }
   ]
 }

@@ -17,7 +17,10 @@
     "@mui/material": "^6.3.1",
     "@mui/styled-engine-sc": "^6.3.1",
     "@mui/styles": "^6.4.0",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^22.13.14",
     "axios": "^1.6.7",
+    "d3": "^7.9.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "mathjs": "^14.2.0",
@@ -31,7 +34,7 @@
     "@eslint/js": "^9.17.0",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/jwt-decode": "^2.2.1",
-    "@types/react": "^17.0.83",
+    "@types/react": "^17.0.85",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
@@ -43,6 +46,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5"
+    "vite": "^6.2.3"
   }
 }

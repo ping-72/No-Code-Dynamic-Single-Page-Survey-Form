@@ -1,49 +1,46 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
+import { Box, Container, Typography, Button } from "@material-ui/core";
+import { useNavigate } from "react-router-dom";
 import styles from "./CallToActionSection.module.css";
 
 const CallToActionSection: React.FC = () => {
-  const [animate, setAnimate] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setAnimate(true);
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <section ref={sectionRef} className={styles.ctaSection}>
-      <div className={styles.overlay}></div>
-      <div className={styles.content}>
-        <h2 className={`${styles.headline} ${animate ? styles.animateIn : ""}`}>
-          Ready to Build Your Survey?
-        </h2>
-        <p
-          className={`${styles.subheadline} ${
-            animate ? styles.animateInDelay : ""
-          }`}
-        >
-          Join thousands of users who are already creating dynamic, interactive
-          surveys without writing a line of code.
-        </p>
-        <button
-          className={`${styles.ctaButton} ${animate ? styles.ctaAnimate : ""}`}
-          onClick={() => (window.location.href = "/dashboard/home")}
-        >
-          Get Started Now
-        </button>
-      </div>
-    </section>
+    <Box className={styles.ctaSection}>
+      <Box className={styles.overlay}></Box>
+      <Container maxWidth="md">
+        <Box className={styles.content}>
+          <Typography variant="h2" className={styles.headline}>
+            Ready to Create Your Survey?
+          </Typography>
+          <Typography variant="h6" className={styles.subheadline}>
+            Join thousands of users who are already creating dynamic,
+            interactive surveys without writing a line of code.
+          </Typography>
+          <Box className={styles.buttonContainer}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={styles.primaryButton}
+              onClick={() => navigate("/sign-up")}
+            >
+              Get Started Now
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              className={styles.secondaryButton}
+              onClick={() => navigate("/sign-in")}
+            >
+              Sign In
+            </Button>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

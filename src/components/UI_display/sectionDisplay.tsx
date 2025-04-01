@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  Box,
-  // Typography
-} from "@material-ui/core";
+import { Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 // import ErrorOutlineIcon from "@material-ui/icons/ErrorOutline";
 import { Section, Question as _BaseQuestion } from "../../interface/interface";
@@ -18,6 +15,37 @@ interface ValidationError {
 }
 
 const useStyles = makeStyles((theme) => ({
+  sectionContainer: {
+    marginBottom: theme.spacing(4),
+    padding: theme.spacing(2),
+    backgroundColor: "#fff",
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+  sectionTitle: {
+    marginBottom: theme.spacing(2),
+    fontWeight: "bold",
+    color: theme.palette.primary.main,
+  },
+  sectionDescription: {
+    marginBottom: theme.spacing(3),
+    color: theme.palette.text.secondary,
+  },
+  formInfoContainer: {
+    backgroundColor: theme.palette.background.default,
+    padding: theme.spacing(3),
+    borderRadius: theme.shape.borderRadius,
+    marginBottom: theme.spacing(3),
+  },
+  formTitle: {
+    fontSize: "1.5rem",
+    fontWeight: "bold",
+    marginBottom: theme.spacing(2),
+  },
+  formDescription: {
+    color: theme.palette.text.secondary,
+    marginBottom: theme.spacing(2),
+  },
   questionContainer: {
     marginBottom: theme.spacing(4),
   },
@@ -48,27 +76,44 @@ const SectionDisplay: React.FC<SectionDisplayProps> = ({
   validationErrors,
 }) => {
   const classes = useStyles();
+  const isFormInfoSection = section.type === "form-info";
 
-  // Sort questions by their order property if available
-  const sortedQuestions = [...section.questions].sort(
-    (a, b) => (a.order || 0) - (b.order || 0)
-  );
-
-  // Helper function to find the error message for a question
-  const getErrorMessage = (questionId: string): string | undefined => {
-    const error = validationErrors.find((err) => err.questionId === questionId);
-    return error?.message;
-  };
+  if (isFormInfoSection) {
+    return (
+      <Box className={classes.formInfoContainer}>
+        <Typography variant="h4" className={classes.formTitle}>
+          {section.sectionTitle}
+        </Typography>
+        {section.description && (
+          <Typography variant="body1" className={classes.formDescription}>
+            {section.description}
+          </Typography>
+        )}
+      </Box>
+    );
+  }
 
   return (
-    <Box>
-      {sortedQuestions.map((question) => (
+    <Box className={classes.sectionContainer}>
+      <Typography variant="h5" className={classes.sectionTitle}>
+        {section.sectionTitle}
+      </Typography>
+      {section.description && (
+        <Typography variant="body1" className={classes.sectionDescription}>
+          {section.description}
+        </Typography>
+      )}
+      {section.questions.map((question) => (
         <Box key={question.questionId} className={classes.questionContainer}>
           <QuestionDisplay
             question={question}
             value={responses[question.questionId] || null}
             onChange={onResponseChange}
-            error={getErrorMessage(question.questionId)}
+            error={
+              validationErrors.find(
+                (err) => err.questionId === question.questionId
+              )?.message
+            }
           />
         </Box>
       ))}

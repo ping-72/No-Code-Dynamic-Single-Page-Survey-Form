@@ -7,7 +7,6 @@ import {
   FormControlLabel,
   FormControl,
   FormGroup,
-  Slider,
   Typography,
   Box,
   useTheme,
@@ -17,11 +16,7 @@ import {
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import ErrorIcon from "@material-ui/icons/Error";
-import {
-  Question as BaseQuestion,
-  // QuestionType,
-  // Option,
-} from "../../interface/interface";
+import { Question as BaseQuestion } from "../../interface/interface";
 import TableDisplay from "./tableDisplay";
 
 // Extend the base Question interface to include the properties we need
@@ -37,6 +32,11 @@ interface Question extends BaseQuestion {
       start: string;
       end: string;
     };
+  };
+  scaleRange?: 5 | 10;
+  scaleLabels?: {
+    start: string;
+    end: string;
   };
 }
 
@@ -158,7 +158,152 @@ const useStyles = makeStyles((theme) => ({
   tableContainer: {
     marginTop: theme.spacing(2),
   },
+  likertContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginTop: theme.spacing(2),
+    width: "100%",
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.background.default,
+    borderRadius: "12px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+  },
+  likertDots: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    maxWidth: "400px",
+    margin: theme.spacing(2, 0),
+    padding: theme.spacing(0, 2),
+  },
+  likertDotContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  likertDot: {
+    width: "24px",
+    height: "24px",
+    borderRadius: "50%",
+    backgroundColor: theme.palette.grey[300],
+    transition: "all 0.2s ease",
+    position: "relative",
+    marginBottom: theme.spacing(0.5),
+    "&:hover": {
+      backgroundColor: theme.palette.primary.light,
+      transform: "scale(1.1)",
+    },
+    "&.selected": {
+      backgroundColor: theme.palette.primary.main,
+      transform: "scale(1.1)",
+    },
+    "&.selected::after": {
+      content: '""',
+      position: "absolute",
+      top: "-8px",
+      left: "-8px",
+      right: "-8px",
+      bottom: "-8px",
+      borderRadius: "50%",
+      backgroundColor: theme.palette.primary.light,
+      opacity: 0.3,
+      zIndex: -1,
+    },
+  },
+  dotNumber: {
+    fontSize: "0.75rem",
+    color: theme.palette.text.secondary,
+    fontWeight: 500,
+    transition: "all 0.2s ease",
+  },
+  dotNumberSelected: {
+    color: theme.palette.primary.main,
+    fontWeight: 600,
+  },
+  likertLabels: {
+    display: "flex",
+    justifyContent: "space-between",
+    width: "100%",
+    maxWidth: "600px",
+    marginTop: theme.spacing(2),
+    padding: theme.spacing(0, 2),
+  },
+  likertLabel: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+  },
+  likertLabelText: {
+    fontSize: "0.875rem",
+    color: theme.palette.text.secondary,
+    fontWeight: 500,
+    marginBottom: theme.spacing(0.5),
+  },
+  likertLabelValue: {
+    fontSize: "0.75rem",
+    color: theme.palette.text.secondary,
+  },
+  selectedValue: {
+    color: theme.palette.primary.main,
+    fontWeight: 600,
+  },
 }));
+
+const LikertScale: React.FC<{
+  value: number | null;
+  onChange: (value: number) => void;
+  scaleRange: 5 | 10;
+}> = ({ value, onChange, scaleRange }) => {
+  const classes = useStyles();
+
+  const getLabelText = (value: number) => {
+    if (value === 1) return "Strongly Disagree";
+    if (value === scaleRange) return "Strongly Agree";
+    if (value === Math.ceil(scaleRange / 2)) return "Neutral";
+    return "";
+  };
+
+  return (
+    <Box className={classes.likertContainer}>
+      <Box className={classes.likertDots}>
+        {Array.from({ length: scaleRange }, (_, i) => i + 1).map((num) => (
+          <Box
+            key={num}
+            className={classes.likertDotContainer}
+            onClick={() => onChange(num)}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                onChange(num);
+              }
+            }}
+            aria-label={`Select ${num} - ${getLabelText(num)}`}
+            aria-selected={value === num}
+          >
+            <Box
+              className={`${classes.likertDot} ${
+                value === num ? "selected" : ""
+              }`}
+            />
+            <Typography
+              className={`${classes.dotNumber} ${
+                value === num ? classes.dotNumberSelected : ""
+              }`}
+            >
+              {num}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   question,
@@ -167,8 +312,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   error,
 }) => {
   const classes = useStyles();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(question.questionId, e.target.value);
@@ -195,15 +339,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onChange(question.questionId, e.target.value);
   };
 
-  const handleSliderChange = (
-    _: React.ChangeEvent<Record<string, unknown>>,
-    newValue: number | number[]
-  ) => {
-    onChange(question.questionId, newValue as number);
-  };
-
   const handleTableColumnSelect = (columnIndex: number) => {
-    // Get the column name that was selected
     if (
       question.options &&
       question.options.length > 0 &&
@@ -220,7 +356,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   };
 
   const formatTableData = () => {
-    // Check if we have table data through options
     if (
       question.options &&
       question.options.length > 0 &&
@@ -229,13 +364,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       const tableData = question.options[0].tableData;
       const headers = tableData.columns || [];
 
-      // Transform rows into the expected format
       const rows = tableData.rows.map((row) => ({
         name: row.attributeName,
         value: row.value,
       }));
 
-      // Find the index of the selected column
       const selectedColumnIndex = headers.findIndex(
         (header) => header === value
       );
@@ -247,8 +380,119 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           selectedColumnIndex >= 0 ? selectedColumnIndex : undefined,
       };
     }
+  };
 
-    return null;
+  const renderQuestion = () => {
+    switch (question.type) {
+      case "text":
+        return (
+          <TextField
+            variant="outlined"
+            size={isMobile ? "small" : "medium"}
+            value={value || ""}
+            onChange={handleInputChange}
+            fullWidth
+            error={!!error}
+            className={classes.input}
+            placeholder={question.placeholder || "Your answer"}
+            type={question.type}
+          />
+        );
+      case "number":
+      case "integer":
+        return (
+          <TextField
+            variant="outlined"
+            size={isMobile ? "small" : "medium"}
+            value={value || ""}
+            onChange={handleNumberChange}
+            fullWidth
+            error={!!error}
+            className={classes.input}
+            placeholder={question.placeholder || "Your answer"}
+            type="number"
+            InputProps={{
+              endAdornment: question.unit ? (
+                <InputAdornment position="end">{question.unit}</InputAdornment>
+              ) : undefined,
+            }}
+          />
+        );
+      case "multi-select":
+        return (
+          <FormControl
+            component="fieldset"
+            error={!!error}
+            className={classes.formControl}
+          >
+            <FormGroup className={classes.checkboxGroup}>
+              {question.options.map((option) => (
+                <FormControlLabel
+                  key={option.optionId}
+                  control={
+                    <Checkbox
+                      checked={isCheckboxSelected(option.value || "")}
+                      onChange={handleCheckboxChange}
+                      value={option.value || ""}
+                      color="primary"
+                    />
+                  }
+                  label={option.value || ""}
+                  className={classes.formControlLabel}
+                />
+              ))}
+            </FormGroup>
+          </FormControl>
+        );
+      case "single-select":
+        return (
+          <FormControl
+            component="fieldset"
+            error={!!error}
+            className={classes.formControl}
+          >
+            <RadioGroup
+              value={value || ""}
+              onChange={handleRadioChange}
+              className={classes.radioGroup}
+            >
+              {question.options.map((option) => (
+                <FormControlLabel
+                  key={option.optionId}
+                  value={option.value || ""}
+                  control={<Radio color="primary" />}
+                  label={option.value || ""}
+                  className={classes.formControlLabel}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        );
+      case "linear-scale":
+        return (
+          <LikertScale
+            value={value as number}
+            onChange={(newValue) => onChange(question.questionId, newValue)}
+            scaleRange={question.scaleRange || 5}
+          />
+        );
+      case "table": {
+        const tableData = formatTableData();
+        return (
+          <div className={classes.tableContainer}>
+            {tableData && (
+              <TableDisplay
+                data={tableData}
+                onChange={handleTableColumnSelect}
+                error={!!error}
+              />
+            )}
+          </div>
+        );
+      }
+      default:
+        return null;
+    }
   };
 
   return (
@@ -273,161 +517,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         </Typography>
       )}
 
-      {(() => {
-        if (question.type === "text") {
-          return (
-            <TextField
-              variant="outlined"
-              size={isMobile ? "small" : "medium"}
-              value={value || ""}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!error}
-              className={classes.input}
-              placeholder={question.placeholder || "Your answer"}
-              type={question.type}
-            />
-          );
-        }
-
-        if (question.type === "number" || question.type === "integer") {
-          return (
-            <TextField
-              variant="outlined"
-              size={isMobile ? "small" : "medium"}
-              value={value || ""}
-              onChange={handleNumberChange}
-              fullWidth
-              error={!!error}
-              className={classes.input}
-              placeholder={question.placeholder || "Your answer"}
-              type="number"
-              InputProps={{
-                endAdornment: question.unit ? (
-                  <InputAdornment position="end">
-                    {question.unit}
-                  </InputAdornment>
-                ) : undefined,
-              }}
-            />
-          );
-        }
-
-        if (question.type === "multi-select" && question.options) {
-          return (
-            <FormControl
-              component="fieldset"
-              error={!!error}
-              className={classes.formControl}
-            >
-              <FormGroup className={classes.checkboxGroup}>
-                {question.options.map((option) => (
-                  <FormControlLabel
-                    key={option.optionId}
-                    control={
-                      <Checkbox
-                        checked={isCheckboxSelected(option.value || "")}
-                        onChange={handleCheckboxChange}
-                        value={option.value || ""}
-                        color="primary"
-                      />
-                    }
-                    label={option.value || ""}
-                    className={classes.formControlLabel}
-                  />
-                ))}
-              </FormGroup>
-            </FormControl>
-          );
-        }
-
-        if (question.type === "single-select" && question.options) {
-          return (
-            <FormControl
-              component="fieldset"
-              error={!!error}
-              className={classes.formControl}
-            >
-              <RadioGroup
-                value={value || ""}
-                onChange={handleRadioChange}
-                className={classes.radioGroup}
-              >
-                {question.options.map((option) => (
-                  <FormControlLabel
-                    key={option.optionId}
-                    value={option.value || ""}
-                    control={<Radio color="primary" />}
-                    label={option.value || ""}
-                    className={classes.formControlLabel}
-                  />
-                ))}
-              </RadioGroup>
-            </FormControl>
-          );
-        }
-
-        if (question.type === "linear-scale") {
-          // Use default slider config if not provided
-          const sliderConfig = question.sliderConfig || {
-            min: 1,
-            max: 5,
-            step: 1,
-            labels: {
-              start: "Low",
-              end: "High",
-            },
-          };
-
-          return (
-            <div className={classes.sliderContainer}>
-              <Slider
-                value={typeof value === "number" ? value : sliderConfig.min}
-                onChange={handleSliderChange}
-                aria-labelledby="slider-value"
-                valueLabelDisplay="auto"
-                step={sliderConfig.step}
-                marks
-                min={sliderConfig.min}
-                max={sliderConfig.max}
-                color="primary"
-              />
-              <Box className={classes.sliderValue}>
-                {sliderConfig.labels && (
-                  <>
-                    <Typography className={classes.sliderLabel}>
-                      {sliderConfig.labels.start}
-                    </Typography>
-                    <div className={classes.sliderValueContainer}>
-                      {typeof value === "number" ? value : sliderConfig.min}
-                    </div>
-                    <Typography className={classes.sliderLabel}>
-                      {sliderConfig.labels.end}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-            </div>
-          );
-        }
-
-        if (question.type === "table") {
-          const tableData = formatTableData();
-          return (
-            <div className={classes.tableContainer}>
-              {tableData && (
-                <TableDisplay
-                  data={tableData}
-                  onChange={handleTableColumnSelect}
-                  error={!!error}
-                />
-              )}
-            </div>
-          );
-        }
-
-        return null;
-      })()}
+      {renderQuestion()}
 
       {error && (
         <Typography className={classes.errorText}>

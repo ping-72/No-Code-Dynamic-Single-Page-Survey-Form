@@ -1,41 +1,48 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { Box, Button, Container, Typography } from "@material-ui/core";
+import { useNavigate } from "react-router-dom";
 import styles from "./HeroSection.module.css";
 
 const HeroSection: React.FC = () => {
-  // Local state to trigger animations on mount
-  const [animate, setAnimate] = useState(false);
-
-  useEffect(() => {
-    // Trigger animations after component mounts
-    setAnimate(true);
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <section className={styles.heroSection}>
-      <div className={styles.overlay}></div>
-      <div className={styles.content}>
-        <h1 className={`${styles.headline} ${animate ? styles.animateIn : ""}`}>
-          Build Powerful Surveys Without Coding
-        </h1>
-        <p
-          className={`${styles.subheadline} ${
-            animate ? styles.animateInDelay : ""
-          }`}
-        >
-          Easily create, customize, and deploy dynamic survey forms with a
-          drag-and-drop interface.
-        </p>
-        <button
-          className={`${styles.ctaButton} ${animate ? styles.ctaAnimate : ""}`}
-          onClick={() => {
-            // Replace with your sign-up action or navigation
-            window.location.href = "/sign-up";
-          }}
-        >
-          Try for Free
-        </button>
-      </div>
-    </section>
+    <Box className={styles.heroSection}>
+      <Container maxWidth="lg">
+        <Box className={styles.content}>
+          <Typography variant="h1" className={styles.title}>
+            Create Dynamic Survey Forms
+            <span className={styles.highlight}> in Minutes</span>
+          </Typography>
+          <br />
+          <Typography variant="h5" className={styles.subtitle}>
+            Build, customize, and share professional survey forms with our
+            intuitive drag-and-drop builder. No coding required.
+          </Typography>
+          <br />
+          <Box className={styles.buttonContainer}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={styles.primaryButton}
+              onClick={() => navigate("/sign-up")}
+            >
+              Get Started Free
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              className={styles.secondaryButton}
+              onClick={() => navigate("/sign-in")}
+            >
+              Sign In
+            </Button>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

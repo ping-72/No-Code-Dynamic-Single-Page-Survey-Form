@@ -66,8 +66,9 @@ export class FormController {
       sectionTitle: "New Section",
       description: "",
       questions: [],
-      order: form.sections.length,
+      order: form.sections.length + 1,
       createdAt: new Date().toISOString(),
+      type: "regular",
     };
 
     return {

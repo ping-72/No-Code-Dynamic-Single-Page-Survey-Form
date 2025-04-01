@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 // import { v4 as uuidv4 } from "uuid";
 import { Toolbar } from "@material-ui/core";
 import { Snackbar } from "@mui/material";
@@ -12,8 +12,8 @@ import { Sidebar } from "./sidebar";
 import { SectionEditor } from "./sectionEditor";
 import FormPreview from "../../formPreview/formPreview";
 import Button from "@mui/material/Button";
-import testData from "./testData.json";
 import api from "../../../config/api";
+import { Paper, Box, TextField } from "@mui/material";
 // import sampleTestData from "./sampleTestData.json";
 
 interface RouteParams extends Record<string, string> {
@@ -43,6 +43,7 @@ type APIError = Error & {
 
 const FormBuilder: React.FC = () => {
   const { userId, id: formId } = useParams<RouteParams>();
+  const location = useLocation();
   console.log(`userId: ${userId} formId: ${formId}`);
   const classes = useStyles();
 
@@ -52,7 +53,16 @@ const FormBuilder: React.FC = () => {
     severity: "success",
   });
 
-  const [form, setForm] = useState<ExtendedForm>(testData as ExtendedForm);
+  // Initialize with a blank form structure
+  const [form, setForm] = useState<ExtendedForm>({
+    formId: formId || "",
+    formTitle: "Untitled Form",
+    description: "",
+    order: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    sections: [],
+  });
   const [activeSection, setActiveSection] = useState(0);
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -66,7 +76,6 @@ const FormBuilder: React.FC = () => {
 
       try {
         setIsLoading(true);
-        // Try to get form by formId - use the correct route path
         const response = await api.get(`/forms/byFormId/${formId}`);
         if (response.data) {
           console.log("Existing form found:", response.data);
@@ -74,21 +83,20 @@ const FormBuilder: React.FC = () => {
           setIsExistingForm(true);
         }
       } catch (error) {
-        // If form doesn't exist, just keep the default template
-        console.log("No existing form found, creating new form", error);
-        // Update formId in the template form
-        setForm((prev) => ({
-          ...prev,
-          formId,
-          userId, // Include userId in new form data
-        }));
+        console.error("Error fetching form:", error);
+        // If form doesn't exist, check if we have form data in location state
+        const state = location.state as { form?: ExtendedForm } | null;
+        if (state?.form) {
+          console.log("Using form data from location state:", state.form);
+          setForm(state.form);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     checkExistingForm();
-  }, [userId, formId]);
+  }, [userId, formId, location.state]);
 
   useEffect(() => {
     // Ensure that each question gets the correct sectionId and questionId in its options.
@@ -191,14 +199,20 @@ const FormBuilder: React.FC = () => {
         formId: formId, // Use the formId from URL params
         userId: userId, // Include userId for validation
         formTitle: form.formTitle || "Untitled Form",
+        description: form.description || "", // Ensure description is included
         order: form.order || 1,
+        createdAt: form.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         sections: form.sections.map((section) => ({
           SectionId: section.SectionId,
+          formId: formId, // Include formId in each section
           sectionTitle: section.sectionTitle,
-          description: section.description,
+          description: section.description || "",
           order: section.order,
+          type: section.type || "regular",
           questions: section.questions.map((question) => ({
             questionId: question.questionId,
+            sectionId: section.SectionId,
             questionText: question.questionText,
             type: question.type,
             isRequired: question.isRequired,
@@ -210,6 +224,8 @@ const FormBuilder: React.FC = () => {
           })),
         })),
       };
+
+      console.log("Saving form data:", formData); // Add logging to debug
 
       let response;
       const successMessage = isExistingForm
@@ -227,7 +243,7 @@ const FormBuilder: React.FC = () => {
       }
 
       const savedForm = response.data;
-      console.log("Saved form:", savedForm);
+      console.log("Saved form response:", savedForm); // Add logging to debug
 
       setSnackbar({
         open: true,
@@ -243,6 +259,7 @@ const FormBuilder: React.FC = () => {
       const error = err as APIError;
       const errorMessage =
         error.response?.data?.message || error.message || "Error saving form";
+      console.error("Error saving form:", error); // Add error logging
       setSnackbar({
         open: true,
         message: `Error saving form: ${errorMessage}`,
@@ -301,6 +318,41 @@ const FormBuilder: React.FC = () => {
           className={classes.mainContent}
           style={{ pointerEvents: isPreview ? "none" : "auto" }}
         >
+          {/* Form Title and Description */}
+          <Paper elevation={3} className={classes.formInfoPaper}>
+            <Box p={3}>
+              <TextField
+                label="Form Title"
+                fullWidth
+                value={form.formTitle}
+                margin="normal"
+                onChange={(e) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    formTitle: e.target.value,
+                    updatedAt: new Date().toISOString(),
+                  }));
+                }}
+              />
+              <TextField
+                label="Form Description (Optional)"
+                fullWidth
+                value={form.description || ""}
+                margin="normal"
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                    updatedAt: new Date().toISOString(),
+                  }))
+                }
+                multiline
+                rows={2}
+              />
+            </Box>
+          </Paper>
+
+          {/* Form Sections */}
           {form.sections.length > 0 && activeSection < form.sections.length && (
             <SectionEditor
               form={form}

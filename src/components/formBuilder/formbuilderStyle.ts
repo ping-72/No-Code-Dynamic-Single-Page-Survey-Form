@@ -118,43 +118,74 @@ export const useStyles = makeStyles((theme: Theme) => ({
     flex: 1,
     padding: theme.spacing(3),
     overflowY: "auto",
-    margin: 0,
+    backgroundColor: "#f5f5f5",
   },
+
+  /** FORM INFO PAPER STYLES **/
+  formInfoPaper: {
+    marginBottom: theme.spacing(3),
+    backgroundColor: "#fff",
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+
+  /** SECTION STYLES **/
   sectionPaper: {
-    marginBottom: theme.spacing(2),
-    padding: theme.spacing(2),
+    padding: theme.spacing(3),
+    marginBottom: theme.spacing(3),
+    backgroundColor: "#fff",
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   },
   sectionHeader: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: theme.spacing(2),
     alignItems: "center",
+    marginBottom: theme.spacing(2),
   },
   sectionTitleInput: {
     marginRight: theme.spacing(2),
   },
+  sectionTitle: {
+    fontWeight: "bold",
+    color: theme.palette.primary.main,
+  },
+
+  /** QUESTION STYLES **/
+  questionContainer: {
+    marginBottom: theme.spacing(3),
+  },
   questionPaper: {
     padding: theme.spacing(2),
-    backgroundColor: "rgb(226 232 240)",
-
     marginBottom: theme.spacing(2),
+    backgroundColor: "#fff",
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
   },
   questionRow: {
     marginBottom: theme.spacing(2),
   },
-  questionLabel: {
-    fontWeight: "bold",
+  optionContainer: {
+    display: "flex",
+    alignItems: "center",
     marginBottom: theme.spacing(1),
+  },
+  optionInput: {
+    flex: 1,
+    marginRight: theme.spacing(1),
+  },
+  deleteButton: {
+    color: theme.palette.error.main,
   },
   addQuestionBtn: {
     marginTop: theme.spacing(2),
-    textTransform: "none",
+    marginBottom: theme.spacing(2),
+  },
+  addOptionButton: {
+    marginTop: theme.spacing(1),
   },
   moveIcon: {
-    padding: 4,
-    margin: "0 2px",
-    "& svg": {
-      fontSize: "1rem",
-    },
+    cursor: "move",
+    marginRight: theme.spacing(1),
   },
 }));

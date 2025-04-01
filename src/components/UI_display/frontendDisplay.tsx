@@ -58,11 +58,18 @@ const useStyles = makeStyles((theme) => ({
   },
   formTitle: {
     fontWeight: 700,
-    marginBottom: theme.spacing(1),
+    marginBottom: theme.spacing(2),
     textShadow: "0 2px 4px rgba(0,0,0,0.2)",
   },
   formDescription: {
-    opacity: 0.9,
+    opacity: 0.95,
+    fontSize: "1.1rem",
+    lineHeight: 1.6,
+    maxWidth: "800px",
+    margin: "0 auto",
+    padding: theme.spacing(1, 0),
+    borderTop: "1px solid rgba(255,255,255,0.2)",
+    borderBottom: "1px solid rgba(255,255,255,0.2)",
   },
   progress: {
     height: 8,
@@ -254,8 +261,9 @@ const FrontendDisplay: React.FC = () => {
         );
 
         if (response.data) {
+          console.log("Form data received:", response.data);
+          console.log("Form description:", response.data.description);
           setFormData(response.data);
-          console.log("Form fetched successfully:", response.data);
           currentFormId = response.data.formId;
 
           // Automatically expand the first section
@@ -274,8 +282,10 @@ const FrontendDisplay: React.FC = () => {
           : null;
 
         if (storedData) {
-          setFormData(storedData as Form);
           console.log("Using stored form data:", storedData);
+          console.log("Stored form description:", storedData.description);
+          setFormData(storedData as Form);
+          currentFormId = storedData.formId;
 
           // Automatically expand the first section
           if (storedData.sections && storedData.sections.length > 0) {
@@ -283,6 +293,8 @@ const FrontendDisplay: React.FC = () => {
           }
         } else {
           // Last resort: use test data
+          console.log("Using test data:", testData);
+          console.log("Test data description:", testData.description);
           setFormData(testData as Form);
           setError("Could not fetch form data. Using test data instead.");
 
@@ -526,9 +538,11 @@ const FrontendDisplay: React.FC = () => {
             {formData.formTitle}
           </Typography>
           {formData.description && (
-            <Typography variant="body1" className={classes.formDescription}>
-              {formData.description}
-            </Typography>
+            <Box mt={2}>
+              <Typography variant="body1" className={classes.formDescription}>
+                {formData.description}
+              </Typography>
+            </Box>
           )}
         </Box>
 

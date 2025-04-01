@@ -12,9 +12,11 @@ import {
   Grid,
   CircularProgress,
   Box,
+  Divider,
 } from "@material-ui/core";
 import DashboardHeader from "./DashboardHeader";
 import api from "../../config/api";
+import testData from "../formBuilder/new file structure/testData.json";
 
 const Template: React.FC = () => {
   const navigate = useNavigate();
@@ -45,7 +47,36 @@ const Template: React.FC = () => {
 
   const createFormHandle = () => {
     const id = uuidv1();
-    navigate(`/${userId}/${id}/edit`);
+    // Create a blank form with default structure
+    const blankForm = {
+      _id: id,
+      formId: id,
+      formTitle: "Untitled Form",
+      description: "",
+      order: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      sections: [], // Empty sections array
+    };
+    console.log("Creating blank form:", blankForm);
+    navigate(`/${userId}/${id}/edit`, {
+      state: {
+        form: blankForm,
+        isNewForm: true,
+      },
+    });
+  };
+
+  const handleSampleForm = () => {
+    const id = uuidv1();
+    // Create a form using testData.json structure
+    const sampleForm = {
+      ...testData,
+      formId: id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    navigate(`/${userId}/${id}/edit`, { state: { form: sampleForm } });
   };
 
   const handleEditForm = (formId: string) => {
@@ -107,74 +138,125 @@ const Template: React.FC = () => {
                 </Typography>
               </CardContent>
             </Card>
-          ) : forms.length === 0 ? (
-            <Card className="empty-state-card">
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  No Forms Found
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
-                  Get started by creating your first form!
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<Add />}
-                  onClick={createFormHandle}
-                  className="create-first-form-button"
-                >
-                  Create Your First Form
-                </Button>
-              </CardContent>
-            </Card>
           ) : (
-            <Grid container spacing={3}>
-              {forms.map((form) => (
-                <Grid item xs={12} sm={6} md={4} key={form._id}>
-                  <Card className="form-card">
+            <>
+              {/* Test Form Section */}
+              <hr />
+              <br />
+              <Box className="section-container">
+                <Typography variant="h5" gutterBottom>
+                  Template Forms
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Card className="form-card">
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          Sample Survey Form
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          gutterBottom
+                        >
+                          A sample form to demonstrate the form builder
+                          capabilities
+                        </Typography>
+                        <Box className="form-actions">
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<Visibility />}
+                            onClick={handleSampleForm}
+                            className="action-button"
+                          >
+                            Use Template
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider style={{ margin: "2rem 0" }} />
+
+              {/* Previous Forms Section */}
+              <Box className="section-container">
+                <Typography variant="h5" gutterBottom>
+                  Your Forms
+                </Typography>
+                {forms.length === 0 ? (
+                  <Card className="empty-state-card">
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        {form.formTitle}
+                        No Forms Found
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        gutterBottom
+                      <Typography variant="body1" color="textSecondary">
+                        Get started by creating your first form!
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<Add />}
+                        onClick={createFormHandle}
+                        className="create-first-form-button"
                       >
-                        Created: {formatDate(form.createdAt)}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Last updated: {formatDate(form.updatedAt)}
-                      </Typography>
-                      <Box className="form-actions">
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          startIcon={<Edit />}
-                          onClick={() => handleEditForm(form.formId)}
-                          className="action-button"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          color="secondary"
-                          startIcon={<Visibility />}
-                          onClick={() => handleViewResponses(form._id)}
-                          className="action-button"
-                        >
-                          View Responses
-                        </Button>
-                      </Box>
+                        Create Your First Form
+                      </Button>
                     </CardContent>
                   </Card>
-                </Grid>
-              ))}
-            </Grid>
+                ) : (
+                  <Grid container spacing={3}>
+                    {forms.map((form) => (
+                      <Grid item xs={12} sm={6} md={4} key={form._id}>
+                        <Card className="form-card">
+                          <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                              {form.formTitle}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="textSecondary"
+                              gutterBottom
+                            >
+                              Created: {formatDate(form.createdAt)}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="textSecondary"
+                              gutterBottom
+                            >
+                              Last updated: {formatDate(form.updatedAt)}
+                            </Typography>
+                            <Box className="form-actions">
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<Edit />}
+                                onClick={() => handleEditForm(form.formId)}
+                                className="action-button"
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                color="secondary"
+                                startIcon={<Visibility />}
+                                onClick={() => handleViewResponses(form._id)}
+                                className="action-button"
+                              >
+                                View Responses
+                              </Button>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            </>
           )}
         </Box>
       </Box>

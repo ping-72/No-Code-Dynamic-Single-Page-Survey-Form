@@ -9,6 +9,8 @@ export type QuestionType =
   | "linear-scale"
   | "table";
 
+export type SectionType = "form-info" | "regular";
+
 export interface DependencyCondition {
   sectionId?: string;
   questionId: string;
@@ -55,6 +57,8 @@ export interface Section {
   questions: Question[];
   order: number;
   createdAt: string;
+  type: SectionType;
+  isEditable?: boolean;
 }
 
 export interface Form {

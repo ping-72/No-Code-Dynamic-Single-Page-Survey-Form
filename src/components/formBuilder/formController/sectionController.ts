@@ -11,6 +11,7 @@ export class SectionController {
       questions: [],
       order: form.sections.length,
       createdAt: new Date().toISOString(),
+      type: "regular",
     };
 
     return {
