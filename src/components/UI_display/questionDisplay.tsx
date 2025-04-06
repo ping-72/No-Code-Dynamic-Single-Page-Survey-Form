@@ -331,17 +331,35 @@ const LikertScale: React.FC<{
                 maxWidth: isMobile ? "50px" : "auto",
               }}
             >
-              {num === 1
-                ? "Very Low Stress"
-                : num === 2
-                ? "Low Stress"
-                : num === 3
-                ? "Moderate Stress"
-                : num === 4
-                ? "High Stress"
-                : num === 5
-                ? "Very High Stress"
-                : ""}
+              {isMobile ? (
+                <>
+                  {num === 1
+                    ? "V. Low"
+                    : num === 2
+                    ? "Low"
+                    : num === 3
+                    ? "Moderate"
+                    : num === 4
+                    ? "High"
+                    : num === 5
+                    ? "V. High"
+                    : ""}
+                  <br />
+                  Stress
+                </>
+              ) : num === 1 ? (
+                "Very Low Stress"
+              ) : num === 2 ? (
+                "Low Stress"
+              ) : num === 3 ? (
+                "Moderate Stress"
+              ) : num === 4 ? (
+                "High Stress"
+              ) : num === 5 ? (
+                "Very High Stress"
+              ) : (
+                ""
+              )}
             </Typography>
           </Box>
         ))}
