@@ -76,19 +76,25 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
     const pieData = pie(data);
 
     // Add slices
-    const slices = svg
+    svg
       .selectAll("path")
-      .data(pieData)
+      .data(pie(data))
       .enter()
       .append("path")
       .attr("d", arc)
-      .attr("fill", (d, i) => color(i.toString()))
+      .attr("fill", (_, i) => color(i.toString()))
       .attr("stroke", "white")
       .style("stroke-width", "2px")
-      .style("opacity", 0.7);
+      .style("opacity", 0.7)
+      .on("mouseover", function () {
+        d3.select(this).style("opacity", 1);
+      })
+      .on("mouseout", function () {
+        d3.select(this).style("opacity", 0.7);
+      });
 
     // Add labels
-    const labels = svg
+    svg
       .selectAll("text")
       .data(pieData)
       .enter()
@@ -111,15 +117,6 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
       .style("font-weight", "bold")
       .text(title);
 
-    // Add hover effects
-    slices
-      .on("mouseover", function () {
-        d3.select(this).style("opacity", 1);
-      })
-      .on("mouseout", function () {
-        d3.select(this).style("opacity", 0.7);
-      });
-
     // Add tooltips
     const tooltip = d3
       .select("body")
@@ -134,11 +131,17 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
       .style("pointer-events", "none")
       .style("box-shadow", "0 2px 4px rgba(0,0,0,0.1)");
 
-    slices
+    svg
+      .selectAll("path")
       .on("mouseover", function (event, d) {
+        // Cast d to the correct type
+        const pieArcData = d as d3.PieArcDatum<{
+          label: string;
+          value: number;
+        }>;
         tooltip.transition().duration(200).style("opacity", 1);
         tooltip
-          .html(`${d.data.label}: ${d.data.value}`)
+          .html(`${pieArcData.data.label}: ${pieArcData.data.value}`)
           .style("left", event.pageX + 10 + "px")
           .style("top", event.pageY - 10 + "px");
       })

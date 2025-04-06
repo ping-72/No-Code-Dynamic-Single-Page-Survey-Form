@@ -167,15 +167,17 @@ const Histogram: React.FC<HistogramProps> = ({
     svg
       .selectAll("rect")
       .on("mouseover", function (event, d) {
-        tooltip.transition().duration(200).style("opacity", 1);
+        // Cast d to the correct type inside the handler
+        const binData = d as d3.Bin<number, number>;
+        tooltip.transition().duration(200).style("opacity", 0.9);
         tooltip
           .html(
-            `Range: ${d.x0?.toFixed(1)} - ${d.x1?.toFixed(1)}<br/>Count: ${
-              d.length
-            }`
+            `Range: ${binData.x0?.toFixed(1)} - ${binData.x1?.toFixed(
+              1
+            )}<br/>Count: ${binData.length}`
           )
-          .style("left", event.pageX + 10 + "px")
-          .style("top", event.pageY - 10 + "px");
+          .style("left", `${event.pageX + 15}px`)
+          .style("top", `${event.pageY - 28}px`);
       })
       .on("mousemove", function (event) {
         tooltip

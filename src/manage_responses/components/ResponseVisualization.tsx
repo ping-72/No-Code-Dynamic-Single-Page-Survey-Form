@@ -23,7 +23,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface ResponseVisualizationProps {
-  questionId: string;
   questionText: string;
   questionType: string;
   responses: Array<string | number | boolean | string[] | null>;
@@ -31,7 +30,6 @@ interface ResponseVisualizationProps {
 }
 
 const ResponseVisualization: React.FC<ResponseVisualizationProps> = ({
-  questionId,
   questionText,
   questionType,
   responses,

@@ -100,7 +100,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, title, xLabel, yLabel }) => {
       .attr("y", (d) => y(d.value))
       .attr("width", x.bandwidth())
       .attr("height", (d) => height - y(d.value))
-      .attr("fill", (d, i) => colorScale(i.toString()))
+      .attr("fill", (_, i) => colorScale(i.toString()))
       .attr("rx", 4)
       .attr("ry", 4)
       .on("mouseover", function () {

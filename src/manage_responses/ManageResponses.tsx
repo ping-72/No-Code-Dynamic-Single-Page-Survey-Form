@@ -246,10 +246,7 @@ const ManageResponses: React.FC = () => {
     return String(response);
   };
 
-  const handleTabChange = (
-    event: React.ChangeEvent<unknown>,
-    newValue: number
-  ) => {
+  const handleTabChange = (_: React.ChangeEvent<unknown>, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -446,7 +443,6 @@ const ManageResponses: React.FC = () => {
           getQuestionsForSection(selectedSection).map((question) => (
             <ResponseVisualization
               key={question.questionId}
-              questionId={question.questionId}
               questionText={question.questionText}
               questionType={question.type}
               responses={getSectionQuestionResponses(

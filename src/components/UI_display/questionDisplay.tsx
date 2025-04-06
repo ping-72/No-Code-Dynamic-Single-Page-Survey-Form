@@ -177,6 +177,11 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "400px",
     margin: theme.spacing(2, 0),
     padding: theme.spacing(0, 2),
+    [theme.breakpoints.down("sm")]: {
+      maxWidth: "100%",
+      padding: theme.spacing(0, 0.5),
+      justifyContent: "space-evenly",
+    },
   },
   likertDotContainer: {
     display: "flex",
@@ -184,6 +189,10 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     cursor: "pointer",
     transition: "all 0.2s ease",
+    [theme.breakpoints.down("sm")]: {
+      minWidth: "35px",
+      margin: theme.spacing(0, 0.25),
+    },
   },
   likertDot: {
     width: "24px",
@@ -193,6 +202,10 @@ const useStyles = makeStyles((theme) => ({
     transition: "all 0.2s ease",
     position: "relative",
     marginBottom: theme.spacing(0.5),
+    [theme.breakpoints.down("sm")]: {
+      width: "22px",
+      height: "22px",
+    },
     "&:hover": {
       backgroundColor: theme.palette.primary.light,
       transform: "scale(1.1)",
@@ -260,6 +273,8 @@ const LikertScale: React.FC<{
   scaleRange: 5 | 10;
 }> = ({ value, onChange, scaleRange }) => {
   const classes = useStyles();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const getLabelText = (value: number) => {
     if (value === 1) return "Strongly Disagree";
@@ -285,18 +300,48 @@ const LikertScale: React.FC<{
             }}
             aria-label={`Select ${num} - ${getLabelText(num)}`}
             aria-selected={value === num}
+            style={isMobile ? { padding: "4px 0" } : {}}
           >
             <Box
               className={`${classes.likertDot} ${
                 value === num ? "selected" : ""
               }`}
             />
+            <div
+              style={{
+                fontSize: isMobile ? "14px" : "15px",
+                fontWeight: value === num ? "bold" : "normal",
+                marginTop: "4px",
+              }}
+            >
+              {num}
+            </div>
             <Typography
               className={`${classes.dotNumber} ${
                 value === num ? classes.dotNumberSelected : ""
               }`}
+              style={{
+                fontSize: isMobile
+                  ? "0.6rem"
+                  : window.innerWidth <= 900
+                  ? "0.875rem"
+                  : "0.8rem",
+                textAlign: "center",
+                paddingTop: "4px",
+                maxWidth: isMobile ? "50px" : "auto",
+              }}
             >
-              {num}
+              {num === 1
+                ? "Very Low Stress"
+                : num === 2
+                ? "Low Stress"
+                : num === 3
+                ? "Moderate Stress"
+                : num === 4
+                ? "High Stress"
+                : num === 5
+                ? "Very High Stress"
+                : ""}
             </Typography>
           </Box>
         ))}
