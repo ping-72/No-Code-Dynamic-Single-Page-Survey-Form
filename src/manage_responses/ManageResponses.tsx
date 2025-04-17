@@ -15,11 +15,15 @@ import {
   useTheme,
   Tabs,
   Tab,
+  Button,
+  Paper,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
 import VisibilityIcon from "@material-ui/icons/Visibility";
+import GetAppIcon from "@material-ui/icons/GetApp";
 import { useParams } from "react-router-dom";
+import * as XLSX from "xlsx";
 import api from "../config/api";
 import ResponseVisualization from "./components/ResponseVisualization";
 import "./ManageResponses.css";
@@ -175,6 +179,26 @@ const useStyles = makeStyles((theme) => ({
       },
     },
   },
+  exportContainer: {
+    marginTop: theme.spacing(3),
+    marginBottom: theme.spacing(3),
+    padding: theme.spacing(2),
+    backgroundColor: "white",
+    borderRadius: "8px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  },
+  exportTitle: {
+    marginBottom: theme.spacing(2),
+    color: theme.palette.primary.main,
+    fontWeight: 600,
+  },
+  exportButton: {
+    backgroundColor: "#4caf50",
+    color: "white",
+    "&:hover": {
+      backgroundColor: "#388e3c",
+    },
+  },
 }));
 
 const ManageResponses: React.FC = () => {
@@ -282,6 +306,72 @@ const ManageResponses: React.FC = () => {
     );
   };
 
+  // Function to flatten and prepare data for Excel export
+  const prepareDataForExport = () => {
+    if (!formData) return [];
+
+    // Build a map of questionId to question text for easier access
+    const questionMap = new Map<
+      string,
+      { questionText: string; sectionTitle: string }
+    >();
+    formData.form.sections.forEach((section) => {
+      section.questions.forEach((question) => {
+        questionMap.set(question.questionId, {
+          questionText: question.questionText,
+          sectionTitle: section.sectionTitle,
+        });
+      });
+    });
+
+    // Process each submission into a flat object
+    return formData.submissions.map((submission) => {
+      const flatRow: Record<string, string | number | boolean> = {
+        "Submission ID": submission._id,
+        "Submitted At": new Date(submission.submittedAt).toLocaleString(),
+        Status: submission.status,
+      };
+
+      // Add all responses from all sections
+      submission.data.sections.forEach((section) => {
+        section.questions.forEach((question) => {
+          const questionInfo = questionMap.get(question.questionId);
+          if (questionInfo) {
+            const columnName = `${questionInfo.sectionTitle} - ${questionInfo.questionText}`;
+            flatRow[columnName] = formatResponse(question.response);
+          }
+        });
+      });
+
+      return flatRow;
+    });
+  };
+
+  // Function to trigger Excel export
+  const exportToExcel = () => {
+    const flatData = prepareDataForExport();
+
+    if (flatData.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(flatData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Responses");
+      XLSX.writeFile(
+        workbook,
+        `${formData?.form.formTitle || "Responses"}.xlsx`
+      );
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      alert(
+        "Failed to export data to Excel. Please make sure the xlsx library is installed."
+      );
+    }
+  };
+
   if (loading) {
     return (
       <Box className={classes.loadingContainer}>
@@ -316,6 +406,26 @@ const ManageResponses: React.FC = () => {
           Total Submissions: {formData?.count}
         </Typography>
       </Box>
+
+      {/* New Export Section */}
+      <Paper className={classes.exportContainer}>
+        <Typography variant="h6" className={classes.exportTitle}>
+          Export Responses
+        </Typography>
+        <Box display="flex" alignItems="center">
+          <Typography variant="body1" style={{ marginRight: "16px" }}>
+            Download all responses as an Excel spreadsheet for further analysis
+          </Typography>
+          <Button
+            variant="contained"
+            className={classes.exportButton}
+            startIcon={<GetAppIcon />}
+            onClick={exportToExcel}
+          >
+            Download Excel
+          </Button>
+        </Box>
+      </Paper>
 
       <Box className="tabs-container">
         <Tabs
